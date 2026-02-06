@@ -1,99 +1,199 @@
 import { Toaster } from "@/components/ui/toaster";
+
 import { Toaster as Sonner } from "@/components/ui/sonner";
+
 import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import { AuthProvider } from "@/contexts/AuthContext";
+
 import { ClearanceProvider } from "@/contexts/ClearanceContext";
+
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
+
 // Pages
+
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import Signup from "./pages/signup";
 import StudentDashboard from "./pages/StudentDashboard";
+
 import StudentRequest from "./pages/StudentRequest";
+
 import StaffDashboard from "./pages/StaffDashboard";
+
 import StaffPending from "./pages/StaffPending";
+
 import StaffHistory from "./pages/StaffHistory";
+
 import AdminDashboard from "./pages/AdminDashboard";
+
 import AdminRequests from "./pages/AdminRequests";
+
 import AdminUsers from "./pages/AdminUsers";
+
 import AdminSettings from "./pages/AdminSettings";
+
 import NotFound from "./pages/NotFound";
+
+
 
 const queryClient = new QueryClient();
 
+
+
 const App = () => (
+
   <QueryClientProvider client={queryClient}>
+
     <TooltipProvider>
+
       <AuthProvider>
+
         <ClearanceProvider>
+
           <Toaster />
+
           <Sonner />
+
           <BrowserRouter>
+
             <Routes>
+
               {/* Public Routes */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+
+              <Route path="/" element={<Landing />} />
+              <Route path="/landing" element={<Landing />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+
+
 
               {/* Student Routes */}
+
               <Route path="/student" element={
+
                 <ProtectedRoute allowedRoles={['student']}>
+
                   <StudentDashboard />
+
                 </ProtectedRoute>
+
               } />
+
               <Route path="/student/request" element={
+
                 <ProtectedRoute allowedRoles={['student']}>
+
                   <StudentRequest />
+
                 </ProtectedRoute>
+
               } />
+
+
 
               {/* Staff Routes */}
+
               <Route path="/staff" element={
+
                 <ProtectedRoute allowedRoles={['staff']}>
+
                   <StaffDashboard />
+
                 </ProtectedRoute>
+
               } />
+
               <Route path="/staff/pending" element={
+
                 <ProtectedRoute allowedRoles={['staff']}>
+
                   <StaffPending />
+
                 </ProtectedRoute>
+
               } />
+
               <Route path="/staff/history" element={
+
                 <ProtectedRoute allowedRoles={['staff']}>
+
                   <StaffHistory />
+
                 </ProtectedRoute>
+
               } />
+
+
 
               {/* Admin Routes */}
+
               <Route path="/admin" element={
+
                 <ProtectedRoute allowedRoles={['admin']}>
+
                   <AdminDashboard />
+
                 </ProtectedRoute>
+
               } />
+
               <Route path="/admin/requests" element={
+
                 <ProtectedRoute allowedRoles={['admin']}>
+
                   <AdminRequests />
+
                 </ProtectedRoute>
+
               } />
+
               <Route path="/admin/users" element={
+
                 <ProtectedRoute allowedRoles={['admin']}>
+
                   <AdminUsers />
+
                 </ProtectedRoute>
+
               } />
+
               <Route path="/admin/settings" element={
+
                 <ProtectedRoute allowedRoles={['admin']}>
+
                   <AdminSettings />
+
                 </ProtectedRoute>
+
               } />
+
+
 
               {/* Catch-all */}
+
               <Route path="*" element={<NotFound />} />
+
             </Routes>
+
           </BrowserRouter>
+
         </ClearanceProvider>
+
       </AuthProvider>
+
     </TooltipProvider>
+
   </QueryClientProvider>
+
 );
 
+
+
 export default App;
+
