@@ -39,6 +39,23 @@ app.get("/db-health", (_req, res) => {
   });
 });
 
+// Security test endpoint
+app.get("/test-security", async (_req, res) => {
+  try {
+    const { testAuthSecurity } = await import('./test/authSecurity.js');
+    const result = await testAuthSecurity();
+    res.json({ 
+      message: 'Security test completed',
+      success: result 
+    });
+  } catch (error) {
+    console.error('Security test error:', error);
+    res.status(500).json({ 
+      error: 'Security test failed' 
+    });
+  }
+});
+
 const port = Number(process.env.PORT ?? 4000);
 
 async function start() {

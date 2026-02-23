@@ -9,6 +9,8 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
@@ -22,4 +24,3 @@
     "typescript": "^5.8.3"
   }
 }
-

@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Signup() {
@@ -14,10 +15,19 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountType, setAccountType] = useState<'student' | 'staff'>('student');
+  const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signup } = useAuth();
+
+  const departments = [
+    { value: 'library', label: 'Library' },
+    { value: 'finance', label: 'Finance' },
+    { value: 'accommodation', label: 'Accommodation/Hostels' },
+    { value: 'it', label: 'IT' },
+    { value: 'academic', label: 'Academic Office' }
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +36,11 @@ export default function Signup() {
     // Basic validation
     if (!name || !email || !registrationNumber || !password || !confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (accountType === 'staff' && !department) {
+      setError('Please select a department');
       return;
     }
 
@@ -42,7 +57,13 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const success = await signup(name, email, registrationNumber, password, accountType);
+      let success = false;
+      
+      if (accountType === 'student') {
+        success = await signup(name, email, registrationNumber, password, accountType, 'Computer Science'); // Default program, can be made dynamic
+      } else {
+        success = await signup(name, email, registrationNumber, password, accountType, undefined, department);
+      }
       
       if (success) {
         // On success, redirect to login
@@ -71,7 +92,7 @@ export default function Signup() {
               <GraduationCap className="w-10 h-10" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">University</h1>
+              <h1 className="text-2xl font-bold">IUK</h1>
               <p className="text-sm opacity-80">Clearance System</p>
             </div>
           </div>
@@ -79,17 +100,17 @@ export default function Signup() {
         
         <div className="text-primary-foreground">
           <h2 className="text-4xl font-bold mb-4">
-            Join Our<br />Clearance System
+            Join Our<br />IUK Clearance System
           </h2>
           <p className="text-lg opacity-80 max-w-md">
-            Create your account to start graduation clearance process. 
+            Create your account to start IUK clearance process. 
             Track your progress and get cleared efficiently.
           </p>
         </div>
 
         <div className="flex gap-8 text-primary-foreground">
           <div>
-            <div className="text-3xl font-bold">18+</div>
+            <div className="text-3xl font-bold">4+</div>
             <div className="text-sm opacity-70">Programs</div>
           </div>
           <div>
@@ -112,14 +133,14 @@ export default function Signup() {
               <GraduationCap className="w-8 h-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Clearance System</h1>
+              <h1 className="text-xl font-bold">IUK Clearance</h1>
             </div>
           </div>
 
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-bold text-foreground">Create Account</h2>
             <p className="mt-2 text-muted-foreground">
-              Join the graduation clearance system
+              Join the IUK clearance system
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               <a 
@@ -228,6 +249,28 @@ export default function Signup() {
                     />
                   </div>
                 </div>
+
+                {/* Department Field - Only for Staff */}
+                {accountType === 'staff' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Select value={department} onValueChange={setDepartment}>
+                        <SelectTrigger className="pl-10">
+                          <SelectValue placeholder="Select your department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((dept) => (
+                            <SelectItem key={dept.value} value={dept.value}>
+                              {dept.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
 
                 {/* Password Field */}
                 <div className="space-y-2">

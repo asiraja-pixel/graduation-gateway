@@ -116,7 +116,7 @@ export default function Login() {
 
             <div>
 
-              <h1 className="text-2xl font-bold">University</h1>
+              <h1 className="text-2xl font-bold">IUK</h1>
 
               <p className="text-sm opacity-80">Clearance System</p>
 
@@ -132,7 +132,7 @@ export default function Login() {
 
           <h2 className="text-4xl font-bold mb-4">
 
-            Graduation Clearance<br />Made Simple
+            IUK Clearance<br />Made Simple
 
           </h2>
 
@@ -198,7 +198,7 @@ export default function Login() {
 
             <div>
 
-              <h1 className="text-xl font-bold">Clearance System</h1>
+              <h1 className="text-xl font-bold">IUK Clearance</h1>
 
             </div>
 
@@ -408,6 +408,23 @@ export default function Login() {
 
           </div>
 
+          {/* Sign Up Link */}
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{' '}
+              <a 
+                href="/signup" 
+                className="text-primary hover:underline font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/signup');
+                }}
+              >
+                Sign up here
+              </a>
+            </p>
+          </div>
+
         </div>
 
       </div>
@@ -417,4 +434,3 @@ export default function Login() {
   );
 
 }
-

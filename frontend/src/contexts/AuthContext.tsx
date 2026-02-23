@@ -2,9 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 
 import { User } from '@/types';
 
-import { mockUsers } from '@/data/mockData';
-
-
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 interface AuthContextType {
 
@@ -13,6 +11,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
 
   login: (email: string, password: string) => Promise<boolean>;
+
+  signup: (name: string, email: string, registrationNumber: string, password: string, accountType: 'student' | 'staff', program?: string, department?: string) => Promise<boolean>;
 
   logout: () => void;
 
@@ -51,33 +51,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // Simulate API call delay
+      if (response.ok) {
+        const data = await response.json();
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.accountType,
+          studentId: data.user.registrationNumber,
+          program: data.user.program,
+          department: data.user.department,
+        };
 
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    
-
-    // Find user by email (password check is simulated - accepts any password)
-
-    const foundUser = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-    
-
-    if (foundUser && password.length >= 6) {
-
-      setUser(foundUser);
-
-      localStorage.setItem('clearance_user', JSON.stringify(foundUser));
-
-      return true;
-
+        setUser(user);
+        localStorage.setItem('clearance_user', JSON.stringify(user));
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
+  }, []);
 
-    
+  const signup = useCallback(async (
+    name: string, 
+    email: string, 
+    registrationNumber: string, 
+    password: string, 
+    accountType: 'student' | 'staff',
+    program?: string,
+    department?: string
+  ): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          registrationNumber, 
+          password, 
+          accountType,
+          program: accountType === 'student' ? program : undefined,
+          department: accountType === 'staff' ? department : undefined
+        }),
+      });
 
-    return false;
+      if (response.ok) {
+        const data = await response.json();
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.accountType,
+          studentId: data.user.registrationNumber,
+          program: data.user.program,
+          department: data.user.department,
+        };
 
+        setUser(user);
+        localStorage.setItem('clearance_user', JSON.stringify(user));
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return false;
+    }
   }, []);
 
 
@@ -94,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
 
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, signup, logout }}>
 
       {children}
 
