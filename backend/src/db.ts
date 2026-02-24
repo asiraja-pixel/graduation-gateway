@@ -1,14 +1,73 @@
 import mongoose from "mongoose";
 
-const mongoUri = process.env.MONGODB_URI as string | undefined;
-
-if (!mongoUri) {
-  throw new Error("MONGODB_URI is not set in the environment");
-}
-
 export async function connectToDatabase() {
+  // Ensure dotenv is loaded in case env vars weren't populated earlier
   try {
-    await mongoose.connect(mongoUri as string);
+    const dotenv = await import('dotenv');
+    const path = await import('path');
+    const envPath = path.resolve(process.cwd(), '.env');
+    // Debug: check if .env exists
+    try {
+      const fs = await import('fs');
+      const exists = fs.existsSync(envPath);
+      console.log('.env path:', envPath, 'exists:', exists);
+    } catch (e) {
+      // ignore
+    }
+    dotenv.config({ path: envPath });
+  } catch (e) {
+    // ignore if import fails; process.env may already be set
+  }
+
+  const mongoUri = process.env.MONGODB_URI as string | undefined;
+  // If dotenv didn't populate it, attempt a simple manual parse of .env
+  let finalMongoUri = mongoUri;
+  if (!finalMongoUri) {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const envPath = path.resolve(process.cwd(), '.env');
+      let content = fs.readFileSync(envPath, { encoding: 'utf-8' });
+      // If the file seems to have non-UTF8 bytes (e.g., BOM for UTF-16), try reading as utf16le
+      if (!content.includes('MONGODB_URI')) {
+        try {
+          content = fs.readFileSync(envPath, { encoding: 'utf16le' });
+        } catch (e) {
+          // ignore
+        }
+      }
+      console.log('.env content:\n', content);
+      for (const line of content.split(/\r?\n/)) {
+        let trimmed = line.trim();
+        if (!trimmed) continue;
+        // remove UTF-8 BOM or stray nulls/bytes at line start
+        trimmed = trimmed.replace(/^([\uFEFF\u0000\x00])+/, '');
+        if (trimmed.startsWith('#')) continue;
+        const eq = trimmed.indexOf('=');
+        if (eq === -1) continue;
+        const key = trimmed.slice(0, eq).trim();
+        let val = trimmed.slice(eq + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+      finalMongoUri = process.env.MONGODB_URI as string | undefined;
+      console.log('After manual .env parse, MONGODB_URI present:', !!finalMongoUri);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (!finalMongoUri) {
+    throw new Error("MONGODB_URI is not set in the environment");
+  }
+
+  try {
+    console.log('Connecting to MongoDB with URI (masked):', `${finalMongoUri?.slice(0, 20)}...`);
+    await mongoose.connect(finalMongoUri as string);
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("MongoDB connection error", error);

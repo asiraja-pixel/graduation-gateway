@@ -22,11 +22,18 @@ export default function StudentDashboard() {
   
   const request = user ? getStudentRequest(user.id) : undefined;
 
-  const stats = request ? {
-    approved: request.departmentClearances.filter(d => d.status === 'approved').length,
-    pending: request.departmentClearances.filter(d => d.status === 'pending').length,
-    rejected: request.departmentClearances.filter(d => d.status === 'rejected').length,
-    total: request.departmentClearances.length,
+  // Convert departmentClearances object to array
+  const departmentClearancesArray = request ? 
+    Object.entries(request.departmentClearances).map(([dept, data]) => ({
+      department: dept as any,
+      ...(typeof data === 'object' ? data : { status: 'pending' })
+    })) : undefined;
+
+  const stats = departmentClearancesArray ? {
+    approved: departmentClearancesArray.filter(d => d.status === 'approved').length,
+    pending: departmentClearancesArray.filter(d => d.status === 'pending').length,
+    rejected: departmentClearancesArray.filter(d => d.status === 'rejected').length,
+    total: departmentClearancesArray.length,
   } : null;
 
   return (
@@ -121,7 +128,7 @@ export default function StudentDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {request.departmentClearances.map((dept) => (
+                  {departmentClearancesArray?.map((dept) => (
                     <div 
                       key={dept.department}
                       className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/50 rounded-lg gap-3"
@@ -148,10 +155,10 @@ export default function StudentDashboard() {
                   ))}
                 </div>
 
-                {request.departmentClearances.some(d => d.status === 'rejected' && d.comment) && (
+                {departmentClearancesArray?.some(d => d.status === 'rejected' && d.comment) && (
                   <div className="mt-6 p-4 bg-destructive/10 rounded-lg">
                     <h4 className="font-medium text-destructive mb-2">Rejection Comments</h4>
-                    {request.departmentClearances
+                    {departmentClearancesArray
                       .filter(d => d.status === 'rejected' && d.comment)
                       .map(d => (
                         <div key={d.department} className="text-sm">

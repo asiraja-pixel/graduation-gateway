@@ -28,12 +28,12 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] || statusConfig.pending;
   const Icon = config.icon;
 
   return (
     <span className={`${baseClasses} ${sizeClasses} ${config.classes}`}>
-      <Icon className={size === 'sm' ? 'w-3 h-3 mr-1' : 'w-4 h-4 mr-1.5'} />
+      {Icon ? <Icon className={size === 'sm' ? 'w-3 h-3 mr-1' : 'w-4 h-4 mr-1.5'} /> : null}
       {config.label}
     </span>
   );

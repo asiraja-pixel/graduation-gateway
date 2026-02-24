@@ -21,11 +21,18 @@ export default function StaffDashboard() {
   const { getDepartmentRequests, requests } = useClearance();
   
   const department = user?.department;
-  const pendingRequests = department ? getDepartmentRequests(department) : [];
+  const departmentKey = department ? (department as string).toLowerCase() : undefined;
+  const pendingRequests = departmentKey ? getDepartmentRequests(departmentKey as any) : [];
   
   // Calculate stats for this department
   const departmentStats = requests.reduce((acc, req) => {
-    const deptClearance = req.departmentClearances.find(d => d.department === department);
+    let deptClearance;
+    if (Array.isArray(req.departmentClearances)) {
+      deptClearance = req.departmentClearances.find(d => (d.department as string).toLowerCase() === departmentKey);
+    } else if (typeof req.departmentClearances === 'object') {
+      deptClearance = (req.departmentClearances as any)[departmentKey as any];
+    }
+    
     if (deptClearance) {
       acc.total++;
       if (deptClearance.status === 'approved') acc.approved++;

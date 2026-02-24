@@ -1,8 +1,18 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 
 const router = express.Router();
+
+// Generate JWT token
+const generateToken = (userId: string, accountType: string) => {
+  return jwt.sign(
+    { id: userId, accountType },
+    process.env.JWT_SECRET || 'fallback-secret',
+    { expiresIn: '24h' }
+  );
+};
 
 // POST /api/auth/signup - Register a new user
 router.post('/signup', async (req, res) => {
@@ -67,9 +77,13 @@ router.post('/signup', async (req, res) => {
       department: newUser.department
     };
 
-    res.status(201).json({ 
+    // Generate JWT token
+    const token = generateToken(newUser._id.toString(), newUser.accountType);
+
+    res.status(201).json({
       message: 'User created successfully',
-      user: userResponse
+      user: userResponse,
+      token
     });
 
   } catch (error) {
@@ -120,9 +134,13 @@ router.post('/login', async (req, res) => {
       department: user.department
     };
 
-    res.json({ 
+    // Generate JWT token
+    const token = generateToken(user._id.toString(), user.accountType);
+
+    res.json({
       message: 'Login successful',
-      user: userResponse
+      user: userResponse,
+      token
     });
 
   } catch (error) {

@@ -15,7 +15,12 @@ export default function StaffHistory() {
   
   // Get requests where this staff member has processed
   const processedRequests = requests.filter(req => {
-    const deptClearance = req.departmentClearances.find(d => d.department === department);
+    let deptClearance;
+    if (Array.isArray(req.departmentClearances)) {
+      deptClearance = req.departmentClearances.find(d => d.department === department);
+    } else if (typeof req.departmentClearances === 'object') {
+      deptClearance = (req.departmentClearances as any)[department];
+    }
     return deptClearance && deptClearance.status !== 'pending';
   });
 
@@ -37,7 +42,12 @@ export default function StaffHistory() {
         {processedRequests.length > 0 ? (
           <div className="space-y-4">
             {processedRequests.map((request) => {
-              const deptClearance = request.departmentClearances.find(d => d.department === department);
+              let deptClearance;
+              if (Array.isArray(request.departmentClearances)) {
+                deptClearance = request.departmentClearances.find(d => d.department === department);
+              } else if (typeof request.departmentClearances === 'object') {
+                deptClearance = (request.departmentClearances as any)[department];
+              }
               return (
                 <Card key={request.id} className="card-elevated">
                   <CardContent className="pt-6">

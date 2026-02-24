@@ -14,6 +14,8 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  accountType: 'student' | 'staff'; // For API compatibility
+  registrationNumber: string; // For API compatibility
   department?: Department; // For staff members
   studentId?: string; // For students
   program?: string; // For students

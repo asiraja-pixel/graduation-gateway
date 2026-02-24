@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
+import { useSocket } from '@/contexts/SocketContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,6 +30,7 @@ import {
 export default function StaffPending() {
   const { user } = useAuth();
   const { getDepartmentRequests, processRequest } = useClearance();
+  const { updateDepartmentStatus } = useSocket();
   
   const department = user?.department;
   const pendingRequests = department ? getDepartmentRequests(department) : [];
@@ -48,8 +50,17 @@ export default function StaffPending() {
     if (!selectedRequest || !actionType || !department || !user) return;
     
     setIsProcessing(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
     
+    // Send via Socket.IO for real-time updates
+    updateDepartmentStatus(
+      selectedRequest.id,
+      department,
+      actionType === 'approve' ? 'approved' : 'rejected',
+      comment || undefined
+    );
+    
+    // Also update local state as fallback
+    await new Promise(resolve => setTimeout(resolve, 500));
     processRequest(
       selectedRequest.id,
       department,
@@ -117,7 +128,13 @@ export default function StaffPending() {
                       <div className="pt-4 border-t">
                         <p className="text-sm font-medium mb-2">Other Departments</p>
                         <div className="flex flex-wrap gap-2">
-                          {request.departmentClearances
+                          {(Array.isArray(request.departmentClearances)
+                            ? request.departmentClearances
+                            : Object.entries(request.departmentClearances).map(([dept, data]) => ({
+                                department: dept as any,
+                                ...(typeof data === 'object' ? data : { status: 'pending' })
+                              }))
+                          )
                             .filter(d => d.department !== department)
                             .map(d => (
                               <div 

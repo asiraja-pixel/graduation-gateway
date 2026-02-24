@@ -8,6 +8,8 @@ interface AuthContextType {
 
   user: User | null;
 
+  token: string | null;
+
   isAuthenticated: boolean;
 
   login: (email: string, password: string) => Promise<boolean>;
@@ -48,6 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   });
 
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('clearance_token');
+  });
+
 
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
@@ -67,13 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           name: data.user.name,
           role: data.user.accountType,
+          accountType: data.user.accountType,
+          registrationNumber: data.user.registrationNumber,
           studentId: data.user.registrationNumber,
           program: data.user.program,
           department: data.user.department,
         };
 
+        // Extract token from response if available
+        const token = data.token || data.user.token;
+        
         setUser(user);
+        setToken(token);
         localStorage.setItem('clearance_user', JSON.stringify(user));
+        if (token) {
+          localStorage.setItem('clearance_token', token);
+        }
         return true;
       }
       
@@ -117,13 +132,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           name: data.user.name,
           role: data.user.accountType,
+          accountType: data.user.accountType,
+          registrationNumber: data.user.registrationNumber,
           studentId: data.user.registrationNumber,
           program: data.user.program,
           department: data.user.department,
         };
 
         setUser(user);
+        setToken(data.token || data.user.token);
         localStorage.setItem('clearance_user', JSON.stringify(user));
+        if (data.token || data.user.token) {
+          localStorage.setItem('clearance_token', data.token || data.user.token);
+        }
         return true;
       }
       
@@ -137,23 +158,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const logout = useCallback(() => {
-
     setUser(null);
-
+    setToken(null);
     localStorage.removeItem('clearance_user');
-
+    localStorage.removeItem('clearance_token');
   }, []);
 
-
-
   return (
-
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, signup, logout }}>
-
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!user, login, signup, logout }}>
       {children}
-
     </AuthContext.Provider>
-
   );
 
 }

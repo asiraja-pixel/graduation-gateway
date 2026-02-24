@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
+import { useSocket } from '@/contexts/SocketContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { Link } from 'react-router-dom';
 export default function StudentRequest() {
   const { user } = useAuth();
   const { getStudentRequest, submitRequest } = useClearance();
+  const { submitClearanceRequest } = useSocket();
   const navigate = useNavigate();
   
   const existingRequest = user ? getStudentRequest(user.id) : undefined;
@@ -33,13 +35,11 @@ export default function StudentRequest() {
 
     setIsSubmitting(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    submitRequest({
+    // Emit to server via Socket.IO (server will persist)
+    submitClearanceRequest({
       studentId: user.id,
       studentName: user.name,
-      studentIdNumber: formData.studentIdNumber,
+      registrationNumber: formData.studentIdNumber,
       program: formData.program,
       email: user.email,
     });

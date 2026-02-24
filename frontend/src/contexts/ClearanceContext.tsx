@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { ClearanceRequest, ClearanceStatus, Department, User } from '@/types';
-import { mockClearanceRequests } from '@/data/mockData';
+import { useAuth } from './AuthContext';
+import { io, Socket } from 'socket.io-client';
 
 interface ClearanceContextType {
   requests: ClearanceRequest[];
@@ -14,40 +15,169 @@ interface ClearanceContextType {
 const ClearanceContext = createContext<ClearanceContextType | undefined>(undefined);
 
 export function ClearanceProvider({ children }: { children: ReactNode }) {
-  const [requests, setRequests] = useState<ClearanceRequest[]>(mockClearanceRequests);
+  const [requests, setRequests] = useState<ClearanceRequest[]>([]);
+  const { token, user } = useAuth();
+
+  // Fetch requests from backend when authenticated
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!token || !user) return;
+      try {
+        // Staff fetches all requests; students fetch only theirs
+        const endpoint = user.accountType === 'staff' 
+          ? '/api/clearance-requests'
+          : '/api/clearance-requests/my';
+        
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log(`[ClearanceContext] Fetched ${data.length} requests for ${user.accountType}`);
+          // Normalize backend documents: map MongoDB `_id` to `id` used in the UI
+          const normalized = (data as any[]).map(d => ({ ...(d || {}), id: d._id || d.id }));
+          setRequests(normalized as any);
+        } else {
+          console.warn(`[ClearanceContext] Failed to fetch requests: ${res.status}`);
+        }
+      } catch (e) {
+        console.error('[ClearanceContext] Fetch error:', e);
+      }
+    };
+
+    // Initial fetch
+    fetchRequests();
+
+    // Refetch every 15 seconds as a safety net for synchronization
+    const interval = setInterval(fetchRequests, 15000);
+    return () => clearInterval(interval);
+  }, [token, user]);
+
+  // Listen for real-time updates via Socket.IO
+  useEffect(() => {
+    if (!token || !user) return;
+
+    const socket = io((import.meta as any).env.VITE_API_URL || 'http://localhost:4000', {
+      auth: { token }
+    });
+
+    // Listen for new requests
+    socket.on('new_request', (newRequest: ClearanceRequest) => {
+      try {
+        const normalized = { ...(newRequest as any), id: (newRequest as any)._id || (newRequest as any).id };
+        console.log('[ClearanceContext] Received new_request event:', normalized.studentName);
+        setRequests(prev => [normalized as any, ...prev]);
+      } catch (e) {
+        console.error('[ClearanceContext] Error handling new_request:', e);
+      }
+    });
+
+    // Listen for status changes
+    socket.on('status_changed', (update: { requestId: string; updatedRequest: ClearanceRequest }) => {
+      try {
+        const updated = { ...(update.updatedRequest as any), id: (update.updatedRequest as any)._id || (update.updatedRequest as any).id };
+        console.log('[ClearanceContext] Received status_changed event');
+        setRequests(prev => prev.map(req => 
+          (req.id || (req as any)._id) === (update.requestId || (update.updatedRequest as any)._id) ? updated : req
+        ));
+      } catch (e) {
+        console.error('[ClearanceContext] Error handling status_changed:', e);
+      }
+    });
+
+    // Listen for user's request updates
+    socket.on('your_request_updated', (updatedRequest: ClearanceRequest) => {
+      try {
+        const normalized = { ...(updatedRequest as any), id: (updatedRequest as any)._id || (updatedRequest as any).id };
+        console.log('[ClearanceContext] Received your_request_updated event');
+        setRequests(prev => prev.map(req => 
+          (req.id || (req as any)._id) === normalized.id ? normalized : req
+        ));
+      } catch (e) {
+        console.error('[ClearanceContext] Error handling your_request_updated:', e);
+      }
+    });
+
+    return () => {
+      socket.close();
+    };
+  }, [token, user]);
 
   const getStudentRequest = useCallback((studentId: string) => {
     return requests.find(r => r.studentId === studentId);
   }, [requests]);
 
   const getDepartmentRequests = useCallback((department: Department) => {
-    return requests.filter(r => 
-      r.departmentClearances.some(dc => dc.department === department && dc.status === 'pending')
-    );
+    const deptKey = typeof department === 'string' ? department.toLowerCase() : department;
+    return requests.filter(r => {
+      // Handle both array and object formats for departmentClearances
+      if (Array.isArray(r.departmentClearances)) {
+        return r.departmentClearances.some(dc => (dc.department as string).toLowerCase() === deptKey && dc.status === 'pending');
+      } else if (typeof r.departmentClearances === 'object') {
+        const deptData = (r.departmentClearances as any)[deptKey];
+        return deptData && deptData.status === 'pending';
+      }
+      return false;
+    });
   }, [requests]);
 
   const calculateOverallStatus = (clearances: ClearanceRequest['departmentClearances']): ClearanceStatus => {
-    if (clearances.some(c => c.status === 'rejected')) return 'rejected';
-    if (clearances.every(c => c.status === 'approved')) return 'approved';
+    // Handle both array and object formats
+    const clearanceArray = Array.isArray(clearances)
+      ? clearances
+      : Object.entries(clearances as any).map(([dept, data]) => ({
+          department: dept as any,
+          ...(typeof data === 'object' ? data : { status: 'pending' })
+        }));
+
+    if (clearanceArray.some(c => c.status === 'rejected')) return 'rejected';
+    if (clearanceArray.every(c => c.status === 'approved')) return 'approved';
     return 'pending';
   };
 
   const submitRequest = useCallback((request: Omit<ClearanceRequest, 'id' | 'submittedAt' | 'overallStatus' | 'departmentClearances'>) => {
-    const newRequest: ClearanceRequest = {
-      ...request,
-      id: `req-${Date.now()}`,
-      submittedAt: new Date().toISOString(),
-      overallStatus: 'pending',
-      departmentClearances: [
-        { department: 'library', status: 'pending' },
-        { department: 'finance', status: 'pending' },
-        { department: 'accommodation', status: 'pending' },
-        { department: 'it', status: 'pending' },
-        { department: 'academic', status: 'pending' },
-      ],
-    };
-    setRequests(prev => [...prev, newRequest]);
-  }, []);
+    // If backend is available and user is authenticated, POST to server
+    (async () => {
+      try {
+        if (token) {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/clearance-requests`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(request)
+          });
+          if (res.ok) {
+            const created = await res.json();
+            const normalizedCreated = { ...(created as any), id: (created as any)._id || (created as any).id };
+            setRequests(prev => [normalizedCreated as any, ...prev]);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore and fall back to mock
+      }
+
+      const newRequest: ClearanceRequest = {
+        ...request,
+        id: `req-${Date.now()}`,
+        submittedAt: new Date().toISOString(),
+        overallStatus: 'pending',
+        departmentClearances: [
+          { department: 'library', status: 'pending' },
+          { department: 'finance', status: 'pending' },
+          { department: 'accommodation', status: 'pending' },
+          { department: 'it', status: 'pending' },
+          { department: 'academic', status: 'pending' },
+        ],
+      };
+      setRequests(prev => [...prev, newRequest]);
+    })();
+  }, [token]);
 
   const processRequest = useCallback((
     requestId: string, 
@@ -57,20 +187,51 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     staffName: string, 
     comment?: string
   ) => {
+    // Send update to backend first
+    (async () => {
+      try {
+        if (token) {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/clearance-requests/${requestId}/status`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              department: typeof department === 'string' ? department.toLowerCase() : department,
+              status,
+              comment
+            })
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            const normalizedUpdated = { ...(updated as any), id: (updated as any)._id || (updated as any).id };
+            setRequests(prev => prev.map(r => (r.id || (r as any)._id) === (requestId || (updated as any)._id) ? normalizedUpdated as any : r));
+            return;
+          }
+        }
+      } catch (e) {
+        // fall back to local update
+      }
+    })();
+
+    // Fallback: update local state
     setRequests(prev => prev.map(request => {
       if (request.id !== requestId) return request;
       
-      const updatedClearances = request.departmentClearances.map(dc => {
-        if (dc.department !== department) return dc;
-        return {
-          ...dc,
-          status,
-          staffId,
-          staffName,
-          comment,
-          processedAt: new Date().toISOString(),
-        };
-      });
+      const updatedClearances = Array.isArray(request.departmentClearances)
+        ? request.departmentClearances.map(dc => {
+            if (dc.department !== department) return dc;
+            return {
+              ...dc,
+              status,
+              staffId,
+              staffName,
+              comment,
+              processedAt: new Date().toISOString(),
+            };
+          })
+        : request.departmentClearances;
 
       const overallStatus = calculateOverallStatus(updatedClearances);
       
@@ -81,7 +242,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         completedAt: overallStatus !== 'pending' ? new Date().toISOString() : undefined,
       };
     }));
-  }, []);
+  }, [token]);
 
   const overrideStatus = useCallback((requestId: string, department: Department, status: ClearanceStatus) => {
     setRequests(prev => prev.map(request => {
