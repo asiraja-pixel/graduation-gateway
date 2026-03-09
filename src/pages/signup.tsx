@@ -26,7 +26,8 @@ export default function Signup() {
     { value: 'finance', label: 'Finance' },
     { value: 'accommodation', label: 'Accommodation/Hostels' },
     { value: 'it', label: 'IT' },
-    { value: 'academic', label: 'Academic Office' }
+    { value: 'academic', label: 'Academic Office' },
+    { value: 'registrar', label: 'Registrar' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +115,7 @@ export default function Signup() {
             <div className="text-sm opacity-70">Programs</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">5</div>
+            <div className="text-3xl font-bold">6</div>
             <div className="text-sm opacity-70">Departments</div>
           </div>
           <div>

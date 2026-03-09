@@ -29,7 +29,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (token && user) {
-      const newSocket = io((import.meta as any).env.VITE_API_URL || 'http://localhost:4000', {
+      const newSocket = io((import.meta as any).env.VITE_API_URL || '', {
         auth: {
           token: token
         }

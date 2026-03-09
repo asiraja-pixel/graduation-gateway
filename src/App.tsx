@@ -20,6 +20,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/signup";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -38,6 +40,8 @@ import AdminRequests from "./pages/AdminRequests";
 import AdminUsers from "./pages/AdminUsers";
 
 import AdminSettings from "./pages/AdminSettings";
+
+import RealtimeTestPage from "./pages/realtime-test";
 
 import NotFound from "./pages/NotFound";
 
@@ -71,7 +75,10 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/realtime-test" element={<RealtimeTestPage />} />
 
 
 

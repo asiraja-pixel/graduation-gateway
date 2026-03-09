@@ -1,0 +1,431 @@
+import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
+
+// Manually parse .env file to handle comments and spaces
+const parseEnvFile = () => {
+  try {
+    const envPath = path.join(process.cwd(), '.env');
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    
+    // Remove UTF-16 BOM if present
+    const cleanContent = envContent.replace(/^\uFEFF/, '');
+    const lines = cleanContent.split('\n');
+    
+    const env: Record<string, string> = {};
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      // Skip comments and empty lines
+      if (trimmedLine.startsWith('#') || !trimmedLine) {
+        return;
+      }
+      
+      // Parse key=value pairs
+      const [key, ...valueParts] = line.split('=');
+      if (key && valueParts.length > 0) {
+        const value = valueParts.join('=').trim();
+        env[key.trim()] = value;
+      }
+    });
+    
+    return env;
+  } catch (error) {
+    console.error('Failed to parse .env file:', error);
+    return {};
+  }
+};
+
+interface EmailConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth: {
+    user: string;
+    pass: string;
+  };
+}
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+class EmailService {
+  private transporter: nodemailer.Transporter;
+  private config: EmailConfig;
+
+  constructor() {
+    // Direct SMTP configuration for Gmail
+    this.config = {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'craaj17atz@gmail.com',
+        pass: 'vzqpuukfjnnvzlsv' // Removed spaces
+      }
+    };
+
+    console.log('🔧 SMTP Configuration:');
+    console.log(`   Host: ${this.config.host}`);
+    console.log(`   Port: ${this.config.port}`);
+    console.log(`   User: ${this.config.auth.user}`);
+    console.log(`   Pass: ${this.config.auth.pass ? '***' + this.config.auth.pass.slice(-4) : 'MISSING'}`);
+
+    // Gmail specific configuration with enhanced settings
+    this.transporter = nodemailer.createTransport({
+      host: this.config.host,
+      port: this.config.port,
+      secure: this.config.secure,
+      auth: {
+        user: this.config.auth.user,
+        pass: this.config.auth.pass
+      },
+      tls: {
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
+      },
+      connectionTimeout: 60000,
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
+      debug: process.env.NODE_ENV === 'development',
+      logger: process.env.NODE_ENV === 'development'
+    });
+  }
+
+  async verifyConnection(): Promise<boolean> {
+    try {
+      if (!this.config.auth.user || !this.config.auth.pass) {
+        console.log('❌ SMTP credentials missing');
+        return false;
+      }
+
+      console.log(`🔍 Verifying SMTP connection to ${this.config.host}:${this.config.port}`);
+      console.log(`📧 Using email: ${this.config.auth.user}`);
+      
+      await this.transporter.verify();
+      console.log('✅ SMTP server connection verified');
+      return true;
+    } catch (error: any) {
+      console.error('❌ SMTP connection failed:', error.message);
+      
+      // Provide specific Gmail troubleshooting
+      if (this.config.host === 'smtp.gmail.com') {
+        console.log('\n🔧 Gmail SMTP Troubleshooting:');
+        console.log('1. Ensure 2FA is enabled on your Gmail account');
+        console.log('2. Generate a new App Password: https://myaccount.google.com/apppasswords');
+        console.log('3. Use App Password (not regular password)');
+        console.log('4. Remove spaces from the App Password');
+        console.log('5. Wait 5-10 minutes after generating new password');
+      }
+      
+      return false;
+    }
+  }
+
+  async sendEmail(options: EmailOptions): Promise<boolean> {
+    try {
+      const mailOptions = {
+        from: `"IUK Clearance System" <${this.config.auth.user}>`,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html
+      };
+
+      console.log(`📧 Sending email to: ${options.to}`);
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully:', info.messageId);
+      
+      // For Gmail, show preview URL if available
+      if (process.env.NODE_ENV === 'development') {
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+          console.log('📧 Preview URL:', previewUrl);
+        }
+      }
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to send email:', error.message);
+      
+      // Don't fail the operation if email fails
+      return false;
+    }
+  }
+
+  async sendPasswordResetEmail(email: string, resetLink: string, userName: string = ''): Promise<boolean> {
+    const subject = 'Password Reset Request - IUK Clearance System';
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset - IUK Clearance System</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+          }
+          .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3b82f6;
+          }
+          .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 10px;
+          }
+          .title {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 10px;
+          }
+          .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+          }
+          .content {
+            margin: 30px 0;
+          }
+          .reset-button {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+          }
+          .reset-button:hover {
+            background-color: #2563eb;
+          }
+          .security-note {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+          }
+          .expiry-warning {
+            color: #dc2626;
+            font-weight: bold;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🎓 IUK Clearance System</div>
+            <div class="title">Password Reset Request</div>
+            <div class="subtitle">Secure password recovery for your account</div>
+          </div>
+          
+          <div class="content">
+            ${userName ? `<p>Hello <strong>${userName}</strong>,</p>` : '<p>Hello,</p>'}
+            
+            <p>We received a request to reset your password for your IUK Clearance System account. If you made this request, please click the button below to reset your password:</p>
+            
+            <div style="text-align: center;">
+              <a href="${resetLink}" class="reset-button">Reset My Password</a>
+            </div>
+            
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace;">
+              ${resetLink}
+            </p>
+            
+            <div class="security-note">
+              <strong>🔒 Security Notice:</strong>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>This link will expire in <span class="expiry-warning">24 hours</span></li>
+                <li>If you didn't request this reset, please ignore this email</li>
+                <li>Never share this link with anyone</li>
+              </ul>
+            </div>
+            
+            <p>If you continue to have problems, please contact our support team.</p>
+          </div>
+          
+          <div class="footer">
+            <p>This is an automated message from IUK Clearance System.</p>
+            <p>© 2026 IUK Clearance System. All rights reserved.</p>
+            <p>If you didn't request this password reset, please disregard this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+      Password Reset Request - IUK Clearance System
+      
+      Hello ${userName || 'User'},
+      
+      We received a request to reset your password. Click the link below to reset it:
+      
+      ${resetLink}
+      
+      This link will expire in 24 hours. If you didn't request this reset, please ignore this email.
+      
+      IUK Clearance System
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+      text
+    });
+  }
+
+  async sendWelcomeEmail(email: string, userName: string, accountType: string): Promise<boolean> {
+    const subject = 'Welcome to IUK Clearance System';
+    
+    // Dynamic frontend URL
+    const getFrontendUrl = () => {
+      if (process.env.FRONTEND_URL && process.env.FRONTEND_URL !== 'undefined') {
+        return process.env.FRONTEND_URL.replace(/\/$/, '');
+      }
+      return 'http://localhost:8080'; // Default development URL
+    };
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome - IUK Clearance System</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+          }
+          .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #10b981;
+          }
+          .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 10px;
+          }
+          .welcome-message {
+            background-color: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .login-button {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🎓 IUK Clearance System</div>
+            <h1>Welcome to IUK Clearance!</h1>
+          </div>
+          
+          <div class="welcome-message">
+            <strong>🎉 Account Created Successfully!</strong>
+            <p>Your ${accountType} account has been set up and is ready to use.</p>
+          </div>
+          
+          <p>Hello <strong>${userName}</strong>,</p>
+          
+          <p>Welcome to the IUK Clearance System! Your account has been successfully created with the following details:</p>
+          
+          <ul>
+            <li><strong>Account Type:</strong> ${accountType.charAt(0).toUpperCase() + accountType.slice(1)}</li>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Status:</strong> Active</li>
+          </ul>
+          
+          <p>You can now log in to your account and start using the clearance system:</p>
+          
+          <div style="text-align: center;">
+            <a href="${getFrontendUrl()}/login" class="login-button">Log In to Your Account</a>
+          </div>
+          
+          <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+          
+          <p>Best regards,<br>The IUK Clearance Team</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html
+    });
+  }
+}
+
+// Create singleton instance
+export const emailService = new EmailService();
+
+// Initialize and verify connection on startup
+emailService.verifyConnection().then(isConnected => {
+  if (!isConnected) {
+    console.warn('⚠️ Email service is not available. Password reset emails will not be sent.');
+  }
+});
+
+export default EmailService;

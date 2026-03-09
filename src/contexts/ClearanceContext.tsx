@@ -3,6 +3,8 @@ import { ClearanceRequest, ClearanceStatus, Department, User } from '@/types';
 import { useAuth } from './AuthContext';
 import { io, Socket } from 'socket.io-client';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 interface ClearanceContextType {
   requests: ClearanceRequest[];
   getStudentRequest: (studentId: string) => ClearanceRequest | undefined;
@@ -28,7 +30,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
           ? '/api/clearance-requests'
           : '/api/clearance-requests/my';
         
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${endpoint}`, {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -60,7 +62,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!token || !user) return;
 
-    const socket = io((import.meta as any).env.VITE_API_URL || 'http://localhost:4000', {
+    const socket = io(API_BASE_URL, {
       auth: { token }
     });
 

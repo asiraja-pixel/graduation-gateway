@@ -16,6 +16,8 @@ import { GraduationCap, Mail, Lock, AlertCircle, User, Briefcase, Shield } from 
 
 import { demoCredentials } from '@/data/mockData';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 
 
 export default function Login() {
@@ -152,7 +154,7 @@ export default function Login() {
 
           <div>
 
-            <div className="text-3xl font-bold">5</div>
+            <div className="text-3xl font-bold">4+</div>
 
             <div className="text-sm opacity-70">Departments</div>
 
@@ -408,8 +410,20 @@ export default function Login() {
 
           </div>
 
-          {/* Sign Up Link */}
-          <div className="text-center">
+          {/* Forgot Password & Sign Up Links */}
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              <a 
+                href="/forgot-password" 
+                className="text-primary hover:underline font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/forgot-password');
+                }}
+              >
+                Forgot your password?
+              </a>
+            </p>
             <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <a 
