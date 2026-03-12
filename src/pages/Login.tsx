@@ -14,8 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { GraduationCap, Mail, Lock, AlertCircle, User, Briefcase, Shield } from 'lucide-react';
 
-import { demoCredentials } from '@/data/mockData';
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 
@@ -66,20 +64,6 @@ export default function Login() {
       setIsLoading(false);
     }
   };
-
-
-
-  const fillDemoCredentials = (type: 'student' | 'staff' | 'admin') => {
-
-    setEmail(demoCredentials[type].email);
-
-    setPassword(demoCredentials[type].password);
-
-    setError('');
-
-  };
-
-
 
   return (
 
@@ -299,80 +283,7 @@ export default function Login() {
               </form>
 
             </CardContent>
-
           </Card>
-
-
-
-          {/* Demo Credentials */}
-
-          <div className="space-y-3">
-
-            <p className="text-sm text-center text-muted-foreground">
-
-              Try demo accounts:
-
-            </p>
-
-            <div className="grid grid-cols-3 gap-2">
-
-              <Button
-
-                variant="outline"
-
-                size="sm"
-
-                onClick={() => fillDemoCredentials('student')}
-
-                className="flex flex-col items-center gap-1 h-auto py-3"
-
-              >
-
-                <User className="w-4 h-4" />
-
-                <span className="text-xs">Student</span>
-
-              </Button>
-
-              <Button
-
-                variant="outline"
-
-                size="sm"
-
-                onClick={() => fillDemoCredentials('staff')}
-
-                className="flex flex-col items-center gap-1 h-auto py-3"
-
-              >
-
-                <Briefcase className="w-4 h-4" />
-
-                <span className="text-xs">Staff</span>
-
-              </Button>
-
-              <Button
-
-                variant="outline"
-
-                size="sm"
-
-                onClick={() => fillDemoCredentials('admin')}
-
-                className="flex flex-col items-center gap-1 h-auto py-3"
-
-              >
-
-                <Shield className="w-4 h-4" />
-
-                <span className="text-xs">Admin</span>
-
-              </Button>
-
-            </div>
-
-          </div>
 
           {/* Forgot Password & Sign Up Links */}
           <div className="text-center space-y-2">

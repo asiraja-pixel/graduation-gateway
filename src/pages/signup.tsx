@@ -14,7 +14,7 @@ export default function Signup() {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [accountType, setAccountType] = useState<'student' | 'staff' | 'admin'>('student');
+  const [accountType, setAccountType] = useState<'student' | 'staff' /* | 'admin' */>('student');
   const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +70,11 @@ export default function Signup() {
       
       if (accountType === 'student') {
         result = await signup(name, email, registrationNumber, password, accountType, 'Computer Science'); // Default program, can be made dynamic
-      } else if (accountType === 'staff') {
+      } else /* if (accountType === 'staff') */ {
         result = await signup(name, email, registrationNumber, password, accountType, undefined, department);
-      } else { // Admin
+      } /* else { // Admin
         result = await signup(name, email, registrationNumber, password, accountType);
-      }
+      } */
       
       if (result.success) {
         // On success, redirect to login
@@ -201,7 +201,7 @@ export default function Signup() {
                       <Briefcase className="w-4 h-4" />
                       Staff
                     </Button>
-                    <Button
+                    {/* <Button
                       type="button"
                       variant={accountType === 'admin' ? 'default' : 'outline'}
                       onClick={() => setAccountType('admin')}
@@ -209,7 +209,7 @@ export default function Signup() {
                     >
                       <Shield className="w-4 h-4" />
                       Admin
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
 
@@ -250,14 +250,14 @@ export default function Signup() {
                 {/* Registration Number Field */}
                 <div className="space-y-2">
                   <Label htmlFor="registrationNumber">
-                    {accountType === 'student' ? 'Student ID' : (accountType === 'staff' ? 'Staff ID' : 'Admin ID')}
+                    {accountType === 'student' ? 'Student ID' : 'Staff ID' /* (accountType === 'staff' ? 'Staff ID' : 'Admin ID') */}
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="registrationNumber"
                       type="text"
-                      placeholder={accountType === 'student' ? 'STU2024001' : (accountType === 'staff' ? 'STAFF001' : 'ADMIN001')}
+                      placeholder={accountType === 'student' ? 'STU2024001' : 'STAFF001' /* (accountType === 'staff' ? 'STAFF001' : 'ADMIN001') */}
                       value={registrationNumber}
                       onChange={(e) => setRegistrationNumber(e.target.value)}
                       className="pl-10"
