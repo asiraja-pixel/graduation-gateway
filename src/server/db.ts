@@ -14,7 +14,7 @@ export async function connectToDatabase() {
     } catch (e) {
       // ignore
     }
-    dotenv.config({ path: envPath });
+    dotenv.config({ path: envPath, override: true });
   } catch (e) {
     // ignore if import fails; process.env may already be set
   }
@@ -66,9 +66,10 @@ export async function connectToDatabase() {
   }
 
   try {
-    console.log('Connecting to MongoDB with URI (masked):', `${finalMongoUri?.slice(0, 20)}...`);
+    const maskedUri = finalMongoUri?.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
+    console.log('Connecting to MongoDB with URI:', maskedUri);
     await mongoose.connect(finalMongoUri as string);
-    console.log("Connected to MongoDB");
+    console.log("Connected to MongoDB database:", mongoose.connection.name);
   } catch (error) {
     console.error("MongoDB connection error", error);
     throw error;

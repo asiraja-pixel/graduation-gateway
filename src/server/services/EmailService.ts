@@ -245,7 +245,10 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">🎓 IUK Clearance System</div>
+            <div class="logo">
+              <img src="http://localhost:5173/iuk_logo.png" alt="IUK Logo" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" />
+              <span style="vertical-align: middle;">IUK Clearance System</span>
+            </div>
             <div class="title">Password Reset Request</div>
             <div class="subtitle">Secure password recovery for your account</div>
           </div>
@@ -377,7 +380,10 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo">🎓 IUK Clearance System</div>
+            <div class="logo">
+              <img src="http://localhost:5173/iuk_logo.png" alt="IUK Logo" style="width: 40px; height: 40px; vertical-align: middle; margin-right: 10px;" />
+              <span style="vertical-align: middle;">IUK Clearance System</span>
+            </div>
             <h1>Welcome to IUK Clearance!</h1>
           </div>
           

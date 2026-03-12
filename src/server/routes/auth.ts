@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { emailService } from '../services/EmailService.js';
 
@@ -17,6 +18,11 @@ const generateToken = (userId: string, accountType: string) => {
 
 // POST /api/auth/signup - Register a new user
 router.post('/signup', async (req, res) => {
+  console.log('--- SIGNUP ATTEMPT ---');
+  console.log('Body:', { ...req.body, password: '[MASKED]' });
+  console.log('Database Name:', mongoose.connection.name);
+  console.log('Database ReadyState:', mongoose.connection.readyState);
+  
   try {
     const { name, email, registrationNumber, password, accountType, program, department } = req.body;
 
@@ -66,6 +72,8 @@ router.post('/signup', async (req, res) => {
     });
 
     await newUser.save();
+    console.log('✅ User saved successfully with ID:', newUser._id);
+    console.log('Saved to collection:', newUser.collection.name);
 
     // Return user without password
     const userResponse = {

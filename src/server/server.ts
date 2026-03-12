@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ override: true });
 
 // Debug: print cwd and whether MONGODB_URI is present
 console.log('cwd:', process.cwd());

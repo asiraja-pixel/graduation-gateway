@@ -102,7 +102,7 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       });
     }
 
-    if (!['library', 'finance', 'accommodation', 'it', 'academic'].includes(department)) {
+    if (!['library', 'finance', 'accommodation', 'it', 'academic', 'registrar'].includes(department)) {
       return res.status(400).json({ 
         error: 'Invalid department' 
       });

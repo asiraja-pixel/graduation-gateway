@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building } from 'lucide-react';
+import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Signup() {
@@ -14,12 +14,20 @@ export default function Signup() {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [accountType, setAccountType] = useState<'student' | 'staff'>('student');
+  const [accountType, setAccountType] = useState<'student' | 'staff' | 'admin'>('student');
   const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, isAuthenticated, user } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const dashboardPath = user.role === 'student' ? '/student' : user.role === 'staff' ? '/staff' : '/admin';
+      navigate(dashboardPath);
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const departments = [
     { value: 'library', label: 'Library' },
@@ -58,15 +66,17 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      let success = false;
+      let result;
       
       if (accountType === 'student') {
-        success = await signup(name, email, registrationNumber, password, accountType, 'Computer Science'); // Default program, can be made dynamic
-      } else {
-        success = await signup(name, email, registrationNumber, password, accountType, undefined, department);
+        result = await signup(name, email, registrationNumber, password, accountType, 'Computer Science'); // Default program, can be made dynamic
+      } else if (accountType === 'staff') {
+        result = await signup(name, email, registrationNumber, password, accountType, undefined, department);
+      } else { // Admin
+        result = await signup(name, email, registrationNumber, password, accountType);
       }
       
-      if (success) {
+      if (result.success) {
         // On success, redirect to login
         navigate('/login', { 
           state: { 
@@ -74,7 +84,7 @@ export default function Signup() {
           } 
         });
       } else {
-        setError('Failed to create account. Please try again.');
+        setError(result.error || 'Failed to create account. Please try again.');
       }
     } catch (err) {
       setError('An error occurred during signup. Please try again.');
@@ -89,9 +99,7 @@ export default function Signup() {
       <div className="hidden lg:flex lg:w-1/2 gradient-hero p-12 flex-col justify-between">
         <div>
           <div className="flex items-center gap-3 text-primary-foreground">
-            <div className="p-3 bg-primary-foreground/10 rounded-xl">
-              <GraduationCap className="w-10 h-10" />
-            </div>
+            <img src="/iuk_logo.png" alt="IUK Logo" className="w-12 h-12 rounded-xl" />
             <div>
               <h1 className="text-2xl font-bold">IUK</h1>
               <p className="text-sm opacity-80">Clearance System</p>
@@ -130,9 +138,7 @@ export default function Signup() {
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="p-2 gradient-primary rounded-lg">
-              <GraduationCap className="w-8 h-8 text-primary-foreground" />
-            </div>
+            <img src="/iuk_logo.png" alt="IUK Logo" className="w-10 h-10 rounded-lg" />
             <div>
               <h1 className="text-xl font-bold">IUK Clearance</h1>
             </div>
@@ -176,7 +182,7 @@ export default function Signup() {
                 {/* Account Type Selection */}
                 <div className="space-y-2">
                   <Label>Account Type</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
                       type="button"
                       variant={accountType === 'student' ? 'default' : 'outline'}
@@ -194,6 +200,15 @@ export default function Signup() {
                     >
                       <Briefcase className="w-4 h-4" />
                       Staff
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={accountType === 'admin' ? 'default' : 'outline'}
+                      onClick={() => setAccountType('admin')}
+                      className="flex items-center gap-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin
                     </Button>
                   </div>
                 </div>
@@ -235,14 +250,14 @@ export default function Signup() {
                 {/* Registration Number Field */}
                 <div className="space-y-2">
                   <Label htmlFor="registrationNumber">
-                    {accountType === 'student' ? 'Student ID' : 'Staff ID'}
+                    {accountType === 'student' ? 'Student ID' : (accountType === 'staff' ? 'Staff ID' : 'Admin ID')}
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="registrationNumber"
                       type="text"
-                      placeholder={accountType === 'student' ? 'STU2024001' : 'STAFF001'}
+                      placeholder={accountType === 'student' ? 'STU2024001' : (accountType === 'staff' ? 'STAFF001' : 'ADMIN001')}
                       value={registrationNumber}
                       onChange={(e) => setRegistrationNumber(e.target.value)}
                       className="pl-10"

@@ -11,27 +11,92 @@ import {
   Users,
   TrendingUp,
   FileText,
-  Settings
+  Settings,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { mockUsers } from '@/data/mockData';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@/types';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// Fetch functions
+const fetchUsers = async (token: string) => {
+  const res = await fetch(`${API_BASE_URL}/api/users`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch users');
+  return res.json();
+};
+
+const fetchRequests = async (token: string) => {
+  const res = await fetch(`${API_BASE_URL}/api/clearance-requests`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch clearance requests');
+  return res.json();
+};
 
 export default function AdminDashboard() {
-  const { requests } = useClearance();
-  
+  const { token } = useAuth();
+
+  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery<User[], Error>({
+    queryKey: ['users'], 
+    queryFn: () => fetchUsers(token!),
+    enabled: !!token
+  });
+
+  const { data: requests = [], isLoading: isLoadingRequests, error: requestsError } = useQuery<any[], Error>({
+    queryKey: ['requests'], 
+    queryFn: () => fetchRequests(token!),
+    enabled: !!token
+  });
+
+  const isLoading = isLoadingUsers || isLoadingRequests;
+  const error = usersError || requestsError;
+
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.overallStatus === 'pending').length,
-    approved: requests.filter(r => r.overallStatus === 'approved').length,
+    approved: requests.filter(r => r.overallStatus === 'approved' || r.overallStatus === 'completed').length,
     rejected: requests.filter(r => r.overallStatus === 'rejected').length,
-    totalUsers: mockUsers.length,
-    students: mockUsers.filter(u => u.role === 'student').length,
-    staff: mockUsers.filter(u => u.role === 'staff').length,
+    totalUsers: users.length,
+    students: users.filter(u => u.accountType === 'student').length,
+    staff: users.filter(u => u.accountType === 'staff').length,
+    admins: users.filter(u => u.accountType === 'admin').length,
   };
 
   const approvalRate = stats.total > 0 
     ? Math.round((stats.approved / (stats.approved + stats.rejected || 1)) * 100) 
     : 0;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Admin Dashboard">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="ml-2 text-muted-foreground">Loading system data...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="Admin Dashboard">
+        <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
+          <AlertTriangle className="w-10 h-10 text-destructive mb-4" />
+          <h3 className="text-xl font-semibold text-destructive">Failed to Load Data</h3>
+          <p className="text-muted-foreground mt-2">{error.message}</p>
+          <Button variant="destructive" className="mt-4" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Admin Dashboard">
@@ -201,10 +266,10 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-status-approved" />
-                    <span>Total Users</span>
+                    <div className="w-3 h-3 rounded-full bg-purple-500" />
+                    <span>Admins</span>
                   </div>
-                  <span className="font-semibold">{stats.totalUsers}</span>
+                  <span className="font-semibold">{stats.admins}</span>
                 </div>
               </div>
             </CardContent>
@@ -234,7 +299,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-medium">{request.studentName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {request.studentIdNumber} • {request.program}
+                      {request.registrationNumber || request.studentIdNumber} • {request.program}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

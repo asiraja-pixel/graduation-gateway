@@ -59,9 +59,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary-foreground/10 rounded-lg">
-                <GraduationCap className="w-8 h-8" />
-              </div>
+              <img src="/iuk_logo.png" alt="IUK Logo" className="w-10 h-10 rounded-lg" />
               <div>
                 <h1 className="text-xl font-bold">Clearance System</h1>
                 <p className="text-sm opacity-80">{title}</p>

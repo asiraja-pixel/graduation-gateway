@@ -39,7 +39,7 @@ const userSchema = new Schema<IUser>({
   accountType: {
     type: String,
     required: true,
-    enum: ['student', 'staff']
+    enum: ['student', 'staff', 'admin']
   },
   program: {
     type: String,

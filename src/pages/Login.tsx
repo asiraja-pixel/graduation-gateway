@@ -49,39 +49,22 @@ export default function Login() {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault();
-
     setError('');
-
     setIsLoading(true);
 
-
-
     try {
-
-      const success = await login(email, password);
-
-      if (success) {
-
+      const result = await login(email, password);
+      if (result.success) {
         // Navigate will happen via the redirect above on re-render
-
       } else {
-
-        setError('Invalid email or password. Please try again.');
-
+        setError(result.error || 'Invalid email or password. Please try again.');
       }
-
     } catch (err) {
-
       setError('An error occurred. Please try again.');
-
     } finally {
-
       setIsLoading(false);
-
     }
-
   };
 
 
@@ -109,21 +92,11 @@ export default function Login() {
         <div>
 
           <div className="flex items-center gap-3 text-primary-foreground">
-
-            <div className="p-3 bg-primary-foreground/10 rounded-xl">
-
-              <GraduationCap className="w-10 h-10" />
-
-            </div>
-
+            <img src="/iuk_logo.png" alt="IUK Logo" className="w-12 h-12 rounded-xl" />
             <div>
-
               <h1 className="text-2xl font-bold">IUK</h1>
-
               <p className="text-sm opacity-80">Clearance System</p>
-
             </div>
-
           </div>
 
         </div>
@@ -191,19 +164,10 @@ export default function Login() {
           {/* Mobile Header */}
 
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-
-            <div className="p-2 gradient-primary rounded-lg">
-
-              <GraduationCap className="w-8 h-8 text-primary-foreground" />
-
-            </div>
-
+            <img src="/iuk_logo.png" alt="IUK Logo" className="w-10 h-10 rounded-lg" />
             <div>
-
               <h1 className="text-xl font-bold">IUK Clearance</h1>
-
             </div>
-
           </div>
 
 

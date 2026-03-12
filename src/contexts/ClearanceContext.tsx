@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { ClearanceRequest, ClearanceStatus, Department, User } from '@/types';
 import { useAuth } from './AuthContext';
-import { io, Socket } from 'socket.io-client';
+import { useSocket } from './SocketContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -58,20 +58,24 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [token, user]);
 
+  const { socket } = useSocket();
+
   // Listen for real-time updates via Socket.IO
   useEffect(() => {
-    if (!token || !user) return;
-
-    const socket = io(API_BASE_URL, {
-      auth: { token }
-    });
+    if (!socket || !token || !user) return;
 
     // Listen for new requests
     socket.on('new_request', (newRequest: ClearanceRequest) => {
       try {
         const normalized = { ...(newRequest as any), id: (newRequest as any)._id || (newRequest as any).id };
         console.log('[ClearanceContext] Received new_request event:', normalized.studentName);
-        setRequests(prev => [normalized as any, ...prev]);
+        setRequests(prev => {
+          // Check if request already exists to avoid duplicates
+          if (prev.some(req => (req.id || (req as any)._id) === normalized.id)) {
+            return prev;
+          }
+          return [normalized as any, ...prev];
+        });
       } catch (e) {
         console.error('[ClearanceContext] Error handling new_request:', e);
       }
@@ -95,18 +99,25 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
       try {
         const normalized = { ...(updatedRequest as any), id: (updatedRequest as any)._id || (updatedRequest as any).id };
         console.log('[ClearanceContext] Received your_request_updated event');
-        setRequests(prev => prev.map(req => 
-          (req.id || (req as any)._id) === normalized.id ? normalized : req
-        ));
+        setRequests(prev => {
+          const exists = prev.some(req => (req.id || (req as any)._id) === normalized.id);
+          if (exists) {
+            return prev.map(req => (req.id || (req as any)._id) === normalized.id ? normalized : req);
+          } else {
+            return [normalized, ...prev];
+          }
+        });
       } catch (e) {
         console.error('[ClearanceContext] Error handling your_request_updated:', e);
       }
     });
 
     return () => {
-      socket.close();
+      socket.off('new_request');
+      socket.off('status_changed');
+      socket.off('your_request_updated');
     };
-  }, [token, user]);
+  }, [socket, token, user]);
 
   const getStudentRequest = useCallback((studentId: string) => {
     return requests.find(r => r.studentId === studentId);
@@ -169,13 +180,14 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         id: `req-${Date.now()}`,
         submittedAt: new Date().toISOString(),
         overallStatus: 'pending',
-        departmentClearances: [
-          { department: 'library', status: 'pending' },
-          { department: 'finance', status: 'pending' },
-          { department: 'accommodation', status: 'pending' },
-          { department: 'it', status: 'pending' },
-          { department: 'academic', status: 'pending' },
-        ],
+        departmentClearances: {
+          library: { status: 'pending' },
+          finance: { status: 'pending' },
+          accommodation: { status: 'pending' },
+          it: { status: 'pending' },
+          academic: { status: 'pending' },
+          registrar: { status: 'pending' },
+        },
       };
       setRequests(prev => [...prev, newRequest]);
     })();
@@ -221,19 +233,34 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     setRequests(prev => prev.map(request => {
       if (request.id !== requestId) return request;
       
-      const updatedClearances = Array.isArray(request.departmentClearances)
-        ? request.departmentClearances.map(dc => {
-            if (dc.department !== department) return dc;
-            return {
-              ...dc,
-              status,
-              staffId,
-              staffName,
-              comment,
-              processedAt: new Date().toISOString(),
-            };
-          })
-        : request.departmentClearances;
+      let updatedClearances: ClearanceRequest['departmentClearances'];
+
+      if (Array.isArray(request.departmentClearances)) {
+        updatedClearances = request.departmentClearances.map(dc => {
+          if (dc.department !== department) return dc;
+          return {
+            ...dc,
+            status,
+            staffId,
+            staffName,
+            comment,
+            processedAt: new Date().toISOString(),
+          };
+        }) as any;
+      } else {
+        const deptKey = (typeof department === 'string' ? department.toLowerCase() : department) as keyof ClearanceRequest['departmentClearances'];
+        updatedClearances = {
+          ...request.departmentClearances,
+          [deptKey]: {
+            ...request.departmentClearances[deptKey],
+            status,
+            staffId,
+            staffName,
+            comment,
+            processedAt: new Date().toISOString(),
+          }
+        };
+      }
 
       const overallStatus = calculateOverallStatus(updatedClearances);
       
@@ -250,15 +277,30 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     setRequests(prev => prev.map(request => {
       if (request.id !== requestId) return request;
       
-      const updatedClearances = request.departmentClearances.map(dc => {
-        if (dc.department !== department) return dc;
-        return {
-          ...dc,
-          status,
-          comment: dc.comment ? `${dc.comment} [Admin Override]` : '[Admin Override]',
-          processedAt: new Date().toISOString(),
+      let updatedClearances: ClearanceRequest['departmentClearances'];
+
+      if (Array.isArray(request.departmentClearances)) {
+        updatedClearances = request.departmentClearances.map(dc => {
+          if (dc.department !== department) return dc;
+          return {
+            ...dc,
+            status,
+            comment: dc.comment ? `${dc.comment} [Admin Override]` : '[Admin Override]',
+            processedAt: new Date().toISOString(),
+          };
+        }) as any;
+      } else {
+        const deptKey = (typeof department === 'string' ? department.toLowerCase() : department) as keyof ClearanceRequest['departmentClearances'];
+        updatedClearances = {
+          ...request.departmentClearances,
+          [deptKey]: {
+            ...request.departmentClearances[deptKey],
+            status,
+            comment: request.departmentClearances[deptKey]?.comment ? `${request.departmentClearances[deptKey].comment} [Admin Override]` : '[Admin Override]',
+            processedAt: new Date().toISOString(),
+          }
         };
-      });
+      }
 
       const overallStatus = calculateOverallStatus(updatedClearances);
       

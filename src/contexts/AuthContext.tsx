@@ -5,19 +5,12 @@ import { User } from '@/types';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface AuthContextType {
-
   user: User | null;
-
   token: string | null;
-
   isAuthenticated: boolean;
-
-  login: (email: string, password: string) => Promise<boolean>;
-
-  signup: (name: string, email: string, registrationNumber: string, password: string, accountType: 'student' | 'staff', program?: string, department?: string) => Promise<boolean>;
-
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (name: string, email: string, registrationNumber: string, password: string, accountType: string, program?: string, department?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-
 }
 
 
@@ -56,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
@@ -66,8 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         const user: User = {
           id: data.user.id,
           email: data.user.email,
@@ -89,13 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (token) {
           localStorage.setItem('clearance_token', token);
         }
-        return true;
+        return { success: true };
       }
       
-      return false;
-    } catch (error) {
+      return { success: false, error: data.error || 'Login failed' };
+    } catch (error: any) {
       console.error('Login error:', error);
-      return false;
+      return { success: false, error: 'Network error or server unavailable' };
     }
   }, []);
 
@@ -104,10 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string, 
     registrationNumber: string, 
     password: string, 
-    accountType: 'student' | 'staff',
+    accountType: string,
     program?: string,
     department?: string
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
         method: 'POST',
@@ -125,8 +119,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         const user: User = {
           id: data.user.id,
           email: data.user.email,
@@ -145,13 +140,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data.token || data.user.token) {
           localStorage.setItem('clearance_token', data.token || data.user.token);
         }
-        return true;
+        return { success: true };
       }
       
-      return false;
-    } catch (error) {
+      return { success: false, error: data.error || 'Signup failed' };
+    } catch (error: any) {
       console.error('Signup error:', error);
-      return false;
+      return { success: false, error: 'Network error or server unavailable' };
     }
   }, []);
 

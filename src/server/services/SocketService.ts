@@ -93,7 +93,7 @@ export class SocketService {
           await clearanceRequest.save();
 
           // Emit to all department rooms
-          const departments = ['library', 'finance', 'accommodation', 'it', 'academic'];
+          const departments = ['library', 'finance', 'accommodation', 'it', 'academic', 'registrar'];
           departments.forEach(dept => {
             this.io.to(`department_${dept}`).emit('new_request', {
               ...clearanceRequest.toObject(),
@@ -121,7 +121,7 @@ export class SocketService {
       // Handle department status updates
       socket.on('status_update', async (updateData: {
         requestId: string;
-        department: 'library' | 'finance' | 'accommodation' | 'it' | 'academic';
+        department: 'library' | 'finance' | 'accommodation' | 'it' | 'academic' | 'registrar';
         status: 'approved' | 'rejected';
         comment?: string;
       }) => {

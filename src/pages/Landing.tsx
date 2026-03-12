@@ -11,11 +11,9 @@ export default function Landing() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 gradient-primary rounded-lg">
-                <GraduationCap className="w-8 h-8 text-primary-foreground" />
-              </div>
+              <img src="/iuk_logo.png" alt="IUK Logo" className="w-12 h-12" />
               <div>
-                <h1 className="text-xl font-bold">University Clearance System</h1>
+                <h1 className="text-xl font-bold">IUK Clearance System</h1>
                 <p className="text-sm text-muted-foreground">Graduation Made Simple</p>
               </div>
             </div>

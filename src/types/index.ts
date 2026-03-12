@@ -7,16 +7,17 @@ export type Department =
   | 'finance' 
   | 'accommodation' 
   | 'it' 
-  | 'academic';
+  | 'academic'
+  | 'registrar';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  accountType: 'student' | 'staff'; // For API compatibility
+  accountType: UserRole; // For API compatibility
   registrationNumber: string; // For API compatibility
-  department?: Department; // For staff members
+  department?: string; // For staff members
   studentId?: string; // For students
   program?: string; // For students
 }
@@ -34,10 +35,18 @@ export interface ClearanceRequest {
   id: string;
   studentId: string;
   studentName: string;
-  studentIdNumber: string;
+  registrationNumber: string; // Matches backend field name
+  studentIdNumber?: string; // Kept for frontend legacy support
   program: string;
   email: string;
-  departmentClearances: DepartmentClearance[];
+  departmentClearances: {
+    library: DepartmentClearance;
+    finance: DepartmentClearance;
+    accommodation: DepartmentClearance;
+    it: DepartmentClearance;
+    academic: DepartmentClearance;
+    registrar: DepartmentClearance;
+  };
   overallStatus: ClearanceStatus;
   submittedAt: string;
   completedAt?: string;
@@ -49,6 +58,7 @@ export const DEPARTMENTS: { value: Department; label: string }[] = [
   { value: 'accommodation', label: 'Accommodation' },
   { value: 'it', label: 'IT Department' },
   { value: 'academic', label: 'Academic Office' },
+  { value: 'registrar', label: 'Registrar' },
 ];
 
 export const getDepartmentLabel = (dept: Department): string => {

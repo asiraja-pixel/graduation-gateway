@@ -20,6 +20,7 @@ export interface IClearanceRequest extends Document {
     accommodation: IDepartmentClearance;
     it: IDepartmentClearance;
     academic: IDepartmentClearance;
+    registrar: IDepartmentClearance;
   };
   submittedAt: Date;
   lastUpdated: Date;
@@ -62,7 +63,8 @@ const ClearanceRequestSchema = new Schema<IClearanceRequest>({
     finance: { type: DepartmentClearanceSchema, default: {} },
     accommodation: { type: DepartmentClearanceSchema, default: {} },
     it: { type: DepartmentClearanceSchema, default: {} },
-    academic: { type: DepartmentClearanceSchema, default: {} }
+    academic: { type: DepartmentClearanceSchema, default: {} },
+    registrar: { type: DepartmentClearanceSchema, default: {} }
   },
   submittedAt: {
     type: Date,

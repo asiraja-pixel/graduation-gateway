@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useClearance } from '@/contexts/ClearanceContext';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,9 @@ import {
   CheckCircle,
   XCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { getDepartmentLabel, ClearanceRequest, ClearanceStatus, Department } from '@/types';
 import { Link } from 'react-router-dom';
@@ -32,9 +35,37 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+const fetchRequests = async (token: string) => {
+  const res = await fetch(`${API_BASE_URL}/api/clearance-requests`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch clearance requests');
+  return res.json();
+};
+
+const overrideRequestStatus = async (token: string, requestId: string, department: Department, status: ClearanceStatus) => {
+  const res = await fetch(`${API_BASE_URL}/api/clearance-requests/${requestId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ department, status, comment: 'Overridden by admin' }),
+  });
+  if (!res.ok) throw new Error('Failed to override status');
+  return res.json();
+};
+
 export default function AdminRequests() {
-  const { requests, overrideStatus } = useClearance();
-  
+  const { token } = useAuth();
+  const { data: requests = [], isLoading, error, refetch } = useQuery<ClearanceRequest[], Error>({
+    queryKey: ['admin-requests'],
+    queryFn: () => fetchRequests(token!),
+    enabled: !!token,
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
@@ -47,8 +78,9 @@ export default function AdminRequests() {
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
       request.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.studentIdNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.program.toLowerCase().includes(searchQuery.toLowerCase());
+      (request.registrationNumber && request.registrationNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (request.studentIdNumber && request.studentIdNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (request.program && request.program.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesStatus = statusFilter === 'all' || request.overallStatus === statusFilter;
     
@@ -59,11 +91,43 @@ export default function AdminRequests() {
     setOverrideDialog({ request, department, newStatus });
   };
 
-  const confirmOverride = () => {
-    if (!overrideDialog) return;
-    overrideStatus(overrideDialog.request.id, overrideDialog.department, overrideDialog.newStatus);
+  const confirmOverride = async () => {
+    if (!overrideDialog || !token) return;
+    try {
+      await overrideRequestStatus(token, overrideDialog.request.id, overrideDialog.department, overrideDialog.newStatus);
+      refetch(); // Refetch data to show the update
+    } catch (e) {
+      console.error("Override failed", e);
+      // You might want to show an error toast here
+    }
     setOverrideDialog(null);
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="All Requests">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="ml-2 text-muted-foreground">Loading requests...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="All Requests">
+        <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
+          <AlertTriangle className="w-10 h-10 text-destructive mb-4" />
+          <h3 className="text-xl font-semibold text-destructive">Failed to Load Requests</h3>
+          <p className="text-muted-foreground mt-2">{error.message}</p>
+          <Button variant="destructive" className="mt-4" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="All Requests">
@@ -126,7 +190,7 @@ export default function AdminRequests() {
                       <StatusBadge status={request.overallStatus} size="sm" />
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {request.studentIdNumber} • {request.program} • {request.email}
+                      {request.registrationNumber || request.studentIdNumber} • {request.program} • {request.email}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Submitted: {new Date(request.submittedAt).toLocaleString()}
@@ -134,14 +198,14 @@ export default function AdminRequests() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
-                      {request.departmentClearances.map(d => (
+                      {Object.entries(request.departmentClearances).map(([dept, clearance]) => (
                         <div 
-                          key={d.department}
+                          key={dept}
                           className={`w-2 h-2 rounded-full ${
-                            d.status === 'approved' ? 'bg-status-approved' :
-                            d.status === 'rejected' ? 'bg-status-rejected' : 'bg-status-pending'
+                            clearance.status === 'approved' ? 'bg-status-approved' :
+                            clearance.status === 'rejected' ? 'bg-status-rejected' : 'bg-status-pending'
                           }`}
-                          title={`${getDepartmentLabel(d.department)}: ${d.status}`}
+                          title={`${getDepartmentLabel(dept as Department)}: ${clearance.status}`}
                         />
                       ))}
                     </div>
@@ -159,14 +223,14 @@ export default function AdminRequests() {
                 <div className="px-6 pb-6 border-t bg-muted/30 animate-fade-in">
                   <div className="pt-4 space-y-3">
                     <h4 className="font-medium text-sm">Department Clearances</h4>
-                    {request.departmentClearances.map((dept) => (
+                    {Object.entries(request.departmentClearances).map(([deptKey, dept]) => (
                       <div 
-                        key={dept.department}
+                        key={deptKey}
                         className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-background rounded-lg gap-3"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{getDepartmentLabel(dept.department)}</span>
+                            <span className="font-medium">{getDepartmentLabel(deptKey as Department)}</span>
                             <StatusBadge status={dept.status} size="sm" />
                           </div>
                           {dept.processedAt && (
@@ -189,7 +253,7 @@ export default function AdminRequests() {
                               className="text-status-approved border-status-approved hover:bg-status-approved/10"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleOverride(request, dept.department, 'approved');
+                                handleOverride(request, deptKey as Department, 'approved');
                               }}
                             >
                               <CheckCircle className="w-3 h-3 mr-1" />
@@ -203,7 +267,7 @@ export default function AdminRequests() {
                               className="text-status-rejected border-status-rejected hover:bg-status-rejected/10"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleOverride(request, dept.department, 'rejected');
+                                handleOverride(request, deptKey as Department, 'rejected');
                               }}
                             >
                               <XCircle className="w-3 h-3 mr-1" />
