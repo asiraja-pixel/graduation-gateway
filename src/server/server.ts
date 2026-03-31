@@ -137,8 +137,8 @@ async function start() {
   try {
     await connectToDatabase();
 
-    server.listen(port, '0.0.0.0', () => {
-      console.log(`Backend listening on http://0.0.0.0:${port}`);
+    server.listen(port, () => {
+      console.log(`Backend listening on port ${port}`);
       console.log(`Socket.IO server running for real-time updates`);
     });
   } catch (error) {
