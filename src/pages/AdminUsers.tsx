@@ -39,6 +39,10 @@ import { Badge } from '@/components/ui/badge';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+interface UserFormState extends Partial<UserType> {
+  password?: string;
+}
+
 // API Functions
 const fetchUsers = async (token: string): Promise<UserType[]> => {
   const res = await fetch(`${API_BASE_URL}/api/users`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -46,7 +50,7 @@ const fetchUsers = async (token: string): Promise<UserType[]> => {
   return res.json();
 };
 
-const createUser = async (token: string, userData: Partial<UserType>): Promise<UserType> => {
+const createUser = async (token: string, userData: UserFormState): Promise<UserType> => {
   const res = await fetch(`${API_BASE_URL}/api/users`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -77,7 +81,7 @@ export default function AdminUsers() {
     enabled: !!token,
   });
 
-  const createUserMutation = useMutation<UserType, Error, Partial<UserType>>({
+  const createUserMutation = useMutation<UserType, Error, UserFormState>({
     mutationFn: (newUser) => createUser(token!, newUser),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -95,7 +99,7 @@ export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newUser, setNewUser] = useState<Partial<UserType>>({
+  const [newUser, setNewUser] = useState<UserFormState>({
     name: '',
     email: '',
     password: '',
@@ -269,7 +273,7 @@ export default function AdminUsers() {
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleDeleteUser(user.id)}
-                      disabled={deleteUserMutation.isLoading}
+                      disabled={deleteUserMutation.isPending}
                     >
                       <Trash2 className="w-3 h-3 mr-1" />
                       Delete
@@ -398,9 +402,9 @@ export default function AdminUsers() {
               <Button 
                 className="gradient-primary" 
                 onClick={handleCreateUser}
-                disabled={createUserMutation.isLoading}
+                disabled={createUserMutation.isPending}
               >
-                {createUserMutation.isLoading ? (
+                {createUserMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Creating...

@@ -1,6 +1,6 @@
 export type UserRole = 'student' | 'staff' | 'admin';
 
-export type ClearanceStatus = 'pending' | 'approved' | 'rejected';
+export type ClearanceStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 
 export type Department = 
   | 'library' 

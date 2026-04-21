@@ -59,13 +59,14 @@ class EmailService {
 
   constructor() {
     // Direct SMTP configuration for Gmail
+    // Trying port 465 (SMTPS) which is often more stable than 587 (STARTTLS)
     this.config = {
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
         user: 'craaj17atz@gmail.com',
-        pass: 'vzqpuukfjnnvzlsv' // Removed spaces
+        pass: 'vzqpuukfjnnvzlsv'
       }
     };
 
@@ -88,42 +89,54 @@ class EmailService {
         rejectUnauthorized: false,
         minVersion: 'TLSv1.2'
       },
-      connectionTimeout: 60000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-      debug: process.env.NODE_ENV === 'development',
-      logger: process.env.NODE_ENV === 'development'
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
+      debug: false,
+      logger: false
     });
   }
 
   async verifyConnection(): Promise<boolean> {
-    try {
-      if (!this.config.auth.user || !this.config.auth.pass) {
-        console.log('❌ SMTP credentials missing');
-        return false;
-      }
+    const maxRetries = 2;
+    let attempt = 0;
 
-      console.log(`🔍 Verifying SMTP connection to ${this.config.host}:${this.config.port}`);
-      console.log(`📧 Using email: ${this.config.auth.user}`);
-      
-      await this.transporter.verify();
-      console.log('✅ SMTP server connection verified');
-      return true;
-    } catch (error: any) {
-      console.error('❌ SMTP connection failed:', error.message);
-      
-      // Provide specific Gmail troubleshooting
-      if (this.config.host === 'smtp.gmail.com') {
-        console.log('\n🔧 Gmail SMTP Troubleshooting:');
-        console.log('1. Ensure 2FA is enabled on your Gmail account');
-        console.log('2. Generate a new App Password: https://myaccount.google.com/apppasswords');
-        console.log('3. Use App Password (not regular password)');
-        console.log('4. Remove spaces from the App Password');
-        console.log('5. Wait 5-10 minutes after generating new password');
+    while (attempt <= maxRetries) {
+      try {
+        if (!this.config.auth.user || !this.config.auth.pass) {
+          console.log('❌ SMTP credentials missing');
+          return false;
+        }
+
+        console.log(`🔍 Verifying SMTP connection to ${this.config.host}:${this.config.port} (Attempt ${attempt + 1}/${maxRetries + 1})`);
+        console.log(`📧 Using email: ${this.config.auth.user}`);
+        
+        await this.transporter.verify();
+        console.log('✅ SMTP server connection verified');
+        return true;
+      } catch (error: any) {
+        console.error(`❌ SMTP connection attempt ${attempt + 1} failed:`, error.message);
+        
+        if (attempt === maxRetries) {
+          // Provide specific Gmail troubleshooting on final failure
+          if (this.config.host === 'smtp.gmail.com') {
+            console.log('\n🔧 Gmail SMTP Troubleshooting:');
+            console.log('1. Ensure 2FA is enabled on your Gmail account');
+            console.log('2. Generate a new App Password: https://myaccount.google.com/apppasswords');
+            console.log('3. Use App Password (not regular password)');
+            console.log('4. Remove spaces from the App Password');
+            console.log('5. Wait 5-10 minutes after generating new password');
+            console.log('6. Ensure your network/firewall allows outgoing connections to port 465 or 587.');
+          }
+          return false;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempt++;
       }
-      
-      return false;
     }
+    return false;
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {

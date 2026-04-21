@@ -68,10 +68,29 @@ export async function connectToDatabase() {
   try {
     const maskedUri = finalMongoUri?.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
     console.log('Connecting to MongoDB with URI:', maskedUri);
-    await mongoose.connect(finalMongoUri as string);
+    
+    // Set connection options for better reliability
+    const options = {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds instead of 30
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    };
+
+    await mongoose.connect(finalMongoUri as string, options);
     console.log("Connected to MongoDB database:", mongoose.connection.name);
-  } catch (error) {
-    console.error("MongoDB connection error", error);
+  } catch (error: any) {
+    console.error("MongoDB connection error:", error.message);
+    
+    if (error.name === 'MongooseServerSelectionError') {
+      console.error('\n🛡️  MONGODB ATLAS IP WHITELIST ISSUE:');
+      console.error('Your current IP address is likely not whitelisted in MongoDB Atlas.');
+      console.error('1. Log in to https://cloud.mongodb.com/');
+      console.error('2. Go to Security > Network Access');
+      console.error('3. Click "Add IP Address"');
+      console.error('4. Click "Add Current IP Address" or "Allow Access From Anywhere (0.0.0.0/0)"');
+      console.error('5. Click "Confirm" and wait 1-2 minutes for the changes to apply.\n');
+    }
+    
     throw error;
   }
 }

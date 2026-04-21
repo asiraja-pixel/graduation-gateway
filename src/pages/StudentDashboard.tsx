@@ -1,40 +1,76 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
+import {
+  FileText,
+  Clock,
+  CheckCircle,
   XCircle,
   ArrowRight,
   Download,
-  Send
+  Send,
+  Loader2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getDepartmentLabel } from '@/types';
+import { getDepartmentLabel, Department, ClearanceStatus } from '@/types';
+import { generateClearancePDF } from '@/utils/generateClearancePDF';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { getStudentRequest } = useClearance();
-  
+
+  const [pdfStage, setPdfStage] = useState<string | null>(null);
+
   const request = user ? getStudentRequest(user.id) : undefined;
 
-  // Convert departmentClearances object to array
-  const departmentClearancesArray = request ? 
-    Object.entries(request.departmentClearances).map(([dept, data]) => ({
-      department: dept as any,
-      ...(typeof data === 'object' ? data : { status: 'pending' })
-    })) : undefined;
+  // Convert departmentClearances object to array for rendering
+  const departmentClearancesArray = request
+    ? Object.entries(request.departmentClearances).map(([dept, data]) => ({
+        department: dept as Department,
+        ...(typeof data === 'object' ? data : { 
+          status: 'pending' as ClearanceStatus,
+          processedAt: undefined,
+          staffName: undefined,
+          comment: undefined,
+          staffId: undefined
+        }),
+      }))
+    : undefined;
 
-  const stats = departmentClearancesArray ? {
-    approved: departmentClearancesArray.filter(d => d.status === 'approved').length,
-    pending: departmentClearancesArray.filter(d => d.status === 'pending').length,
-    rejected: departmentClearancesArray.filter(d => d.status === 'rejected').length,
-    total: departmentClearancesArray.length,
-  } : null;
+  const stats = departmentClearancesArray
+    ? {
+        approved: departmentClearancesArray.filter((d) => d.status === 'approved' || d.status === 'completed').length,
+        pending: departmentClearancesArray.filter((d) => d.status === 'pending').length,
+        rejected: departmentClearancesArray.filter((d) => d.status === 'rejected').length,
+        total: departmentClearancesArray.length,
+      }
+    : null;
+
+  // ── PDF download handler ──────────────────────────────────────────────────
+  const handleDownloadCertificate = async () => {
+    if (!user || !request) return;
+    try {
+      await generateClearancePDF(
+        {
+          name: user.name,
+          email: user.email,
+          registrationNumber: user.registrationNumber || user.studentId || '',
+          program: user.program,
+        },
+        request,
+        (stage) => setPdfStage(stage)
+      );
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setPdfStage(null);
+    }
+  };
 
   return (
     <DashboardLayout title="Student Dashboard">
@@ -82,7 +118,9 @@ export default function StudentDashboard() {
                       <CheckCircle className="w-6 h-6 text-status-approved" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{stats?.approved}/{stats?.total}</p>
+                      <p className="text-2xl font-bold">
+                        {stats?.approved}/{stats?.total}
+                      </p>
                       <p className="text-sm text-muted-foreground">Approved</p>
                     </div>
                   </div>
@@ -129,20 +167,28 @@ export default function StudentDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {departmentClearancesArray?.map((dept) => (
-                    <div 
+                    <div
                       key={dept.department}
                       className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/50 rounded-lg gap-3"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${
-                          dept.status === 'approved' ? 'bg-status-approved' :
-                          dept.status === 'rejected' ? 'bg-status-rejected' : 'bg-status-pending'
-                        }`} />
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            dept.status === 'approved'
+                              ? 'bg-status-approved'
+                              : dept.status === 'rejected'
+                              ? 'bg-status-rejected'
+                              : 'bg-status-pending'
+                          }`}
+                        />
                         <div>
-                          <p className="font-medium">{getDepartmentLabel(dept.department)}</p>
+                          <p className="font-medium">
+                            {getDepartmentLabel(dept.department)}
+                          </p>
                           {dept.processedAt && (
                             <p className="text-xs text-muted-foreground">
-                              Processed: {new Date(dept.processedAt).toLocaleDateString()}
+                              Processed:{' '}
+                              {new Date(dept.processedAt).toLocaleDateString()}
                               {dept.staffName && ` by ${dept.staffName}`}
                             </p>
                           )}
@@ -155,14 +201,20 @@ export default function StudentDashboard() {
                   ))}
                 </div>
 
-                {departmentClearancesArray?.some(d => d.status === 'rejected' && d.comment) && (
+                {departmentClearancesArray?.some(
+                  (d) => d.status === 'rejected' && d.comment
+                ) && (
                   <div className="mt-6 p-4 bg-destructive/10 rounded-lg">
-                    <h4 className="font-medium text-destructive mb-2">Rejection Comments</h4>
+                    <h4 className="font-medium text-destructive mb-2">
+                      Rejection Comments
+                    </h4>
                     {departmentClearancesArray
-                      .filter(d => d.status === 'rejected' && d.comment)
-                      .map(d => (
+                      .filter((d) => d.status === 'rejected' && d.comment)
+                      .map((d) => (
                         <div key={d.department} className="text-sm">
-                          <span className="font-medium">{getDepartmentLabel(d.department)}:</span>{' '}
+                          <span className="font-medium">
+                            {getDepartmentLabel(d.department)}:
+                          </span>{' '}
                           {d.comment}
                         </div>
                       ))}
@@ -171,8 +223,9 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
 
-            {/* Download Certificate */}
-            {request.overallStatus === 'approved' && (
+            {/* ── Download Certificate (shown when fully approved) ── */}
+            {(request.overallStatus === 'approved' ||
+              request.overallStatus === 'completed') && (
               <Card className="card-elevated border-status-approved/30 bg-status-approved/5">
                 <CardContent className="pt-6">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -184,12 +237,31 @@ export default function StudentDashboard() {
                         <h3 className="text-lg font-semibold">Congratulations!</h3>
                         <p className="text-muted-foreground">
                           All departments have approved your clearance request.
+                          {pdfStage && (
+                            <span className="ml-2 text-primary font-medium">
+                              {pdfStage}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
-                    <Button className="bg-status-approved hover:bg-status-approved/90">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Certificate
+
+                    <Button
+                      className="bg-status-approved hover:bg-status-approved/90 min-w-[200px]"
+                      onClick={handleDownloadCertificate}
+                      disabled={!!pdfStage}
+                    >
+                      {pdfStage ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {pdfStage}
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download Certificate
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -204,9 +276,12 @@ export default function StudentDashboard() {
                 <div className="p-4 bg-primary/10 rounded-full w-fit mx-auto mb-4">
                   <FileText className="w-12 h-12 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No Clearance Request Found</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  No Clearance Request Found
+                </h3>
                 <p className="text-muted-foreground mb-6">
-                  You haven't submitted a clearance request yet. Start your graduation clearance process by submitting a new request.
+                  You haven't submitted a clearance request yet. Start your
+                  graduation clearance process by submitting a new request.
                 </p>
                 <Link to="/student/request">
                   <Button className="gradient-primary">
