@@ -13,6 +13,12 @@ export interface IClearanceRequest extends Document {
   studentName: string;
   registrationNumber: string;
   program?: string;
+  nationality?: string;
+  gender?: string;
+  phoneNumber?: string;
+  address?: string;
+  startYear?: string;
+  endYear?: string;
   overallStatus: 'pending' | 'in_progress' | 'completed' | 'rejected';
   departmentClearances: {
     library: IDepartmentClearance;
@@ -53,6 +59,12 @@ const ClearanceRequestSchema = new Schema<IClearanceRequest>({
     required: true
   },
   program: String,
+  nationality: String,
+  gender: String,
+  phoneNumber: String,
+  address: String,
+  startYear: String,
+  endYear: String,
   overallStatus: {
     type: String,
     enum: ['pending', 'in_progress', 'completed', 'rejected'],
@@ -85,8 +97,8 @@ ClearanceRequestSchema.index({ overallStatus: 1 });
 
 // Method to update overall status based on department clearances
 ClearanceRequestSchema.methods.updateOverallStatus = function() {
-  const departments = Object.keys(this.departmentClearances);
-  const statuses = departments.map(dept => this.departmentClearances[dept].status);
+  const departments = ['library', 'finance', 'accommodation', 'it', 'academic', 'registrar'];
+  const statuses = departments.map(dept => (this.departmentClearances as Record<string, IDepartmentClearance>)[dept]?.status || 'pending');
   
   const allApproved = statuses.every(status => status === 'approved');
   const anyRejected = statuses.some(status => status === 'rejected');

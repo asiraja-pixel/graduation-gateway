@@ -3,7 +3,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
 import { useSocket } from '@/contexts/SocketContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -16,7 +16,7 @@ import {
   GraduationCap,
   Calendar
 } from 'lucide-react';
-import { getDepartmentLabel, ClearanceRequest } from '@/types';
+import { getDepartmentLabel, ClearanceRequest, Department, DepartmentClearance } from '@/types';
 import { Link } from 'react-router-dom';
 import {
   Dialog,
@@ -32,7 +32,7 @@ export default function StaffPending() {
   const { getDepartmentRequests, processRequest } = useClearance();
   const { updateDepartmentStatus } = useSocket();
   
-  const department = user?.department;
+  const department = user?.department as Department | undefined;
   const pendingRequests = department ? getDepartmentRequests(department) : [];
   
   const [selectedRequest, setSelectedRequest] = useState<ClearanceRequest | null>(null);
@@ -128,13 +128,11 @@ export default function StaffPending() {
                       <div className="pt-4 border-t">
                         <p className="text-sm font-medium mb-2">Other Departments</p>
                         <div className="flex flex-wrap gap-2">
-                          {(Array.isArray(request.departmentClearances)
-                            ? request.departmentClearances
-                            : Object.entries(request.departmentClearances).map(([dept, data]) => ({
-                                department: dept as any,
-                                ...(typeof data === 'object' ? data : { status: 'pending' })
-                              }))
-                          )
+                          {Object.entries(request.departmentClearances as Record<string, DepartmentClearance>)
+                            .map(([dept, data]) => ({
+                                department: dept as Department,
+                                status: data.status
+                            }))
                             .filter(d => d.department !== department)
                             .map(d => (
                               <div 

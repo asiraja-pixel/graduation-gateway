@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
@@ -10,28 +9,22 @@ import {
   Clock, 
   CheckCircle, 
   XCircle,
-  FileText,
   Users
 } from 'lucide-react';
-import { getDepartmentLabel } from '@/types';
+import { getDepartmentLabel, Department, DepartmentClearance } from '@/types';
 import { Link } from 'react-router-dom';
 
 export default function StaffDashboard() {
   const { user } = useAuth();
   const { getDepartmentRequests, requests } = useClearance();
   
-  const department = user?.department;
-  const departmentKey = department ? (department as string).toLowerCase() : undefined;
-  const pendingRequests = departmentKey ? getDepartmentRequests(departmentKey as any) : [];
+  const department = user?.department as Department | undefined;
+  const pendingRequests = department ? getDepartmentRequests(department) : [];
   
   // Calculate stats for this department
   const departmentStats = requests.reduce((acc, req) => {
-    let deptClearance;
-    if (Array.isArray(req.departmentClearances)) {
-      deptClearance = req.departmentClearances.find(d => (d.department as string).toLowerCase() === departmentKey);
-    } else if (typeof req.departmentClearances === 'object') {
-      deptClearance = (req.departmentClearances as any)[departmentKey as any];
-    }
+    const clearances = req.departmentClearances as Record<string, DepartmentClearance>;
+    const deptClearance = department ? clearances[department] : null;
     
     if (deptClearance) {
       acc.total++;

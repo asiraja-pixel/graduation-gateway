@@ -42,7 +42,21 @@ const fetchRequests = async (token: string) => {
     headers: { 'Authorization': `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch clearance requests');
-  return res.json();
+  const data = await res.json();
+  
+  // Normalize data to ensure 'id' is present (map from MongoDB _id if needed)
+  return (data as any[]).map(d => ({
+    ...d,
+    id: d.id || d._id,
+    studentId: d.studentId || d.registrationNumber || '',
+    // Ensure departmentClearances is always an object
+    departmentClearances: Array.isArray(d.departmentClearances) 
+      ? d.departmentClearances.reduce((acc: any, dc: any) => {
+          if (dc.department) acc[dc.department.toLowerCase()] = dc;
+          return acc;
+        }, {})
+      : d.departmentClearances
+  }));
 };
 
 const overrideRequestStatus = async (token: string, requestId: string, department: Department, status: ClearanceStatus) => {

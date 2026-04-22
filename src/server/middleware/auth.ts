@@ -3,7 +3,20 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User.js';
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: {
+    id: string;
+    accountType: 'student' | 'staff' | 'admin';
+    department?: string;
+    name?: string;
+    registrationNumber?: string;
+    program?: string;
+    nationality?: string;
+    gender?: string;
+    phoneNumber?: string;
+    address?: string;
+    startYear?: string;
+    endYear?: string;
+  };
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {

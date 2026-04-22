@@ -60,6 +60,12 @@ export default function StudentDashboard() {
           email: user.email,
           registrationNumber: user.registrationNumber || user.studentId || '',
           program: user.program,
+          nationality: user.nationality,
+          gender: user.gender,
+          phoneNumber: user.phoneNumber,
+          address: user.address,
+          startYear: user.startYear,
+          endYear: user.endYear,
         },
         request,
         (stage) => setPdfStage(stage)

@@ -47,7 +47,12 @@ interface UserFormState extends Partial<UserType> {
 const fetchUsers = async (token: string): Promise<UserType[]> => {
   const res = await fetch(`${API_BASE_URL}/api/users`, { headers: { 'Authorization': `Bearer ${token}` } });
   if (!res.ok) throw new Error('Failed to fetch users');
-  return res.json();
+  const data = await res.json();
+  // Normalize MongoDB `_id` to `id` for UI consistency
+  return (data as UserType[]).map(u => ({
+    ...u,
+    id: u.id || u._id || ''
+  }));
 };
 
 const createUser = async (token: string, userData: UserFormState): Promise<UserType> => {
@@ -60,7 +65,11 @@ const createUser = async (token: string, userData: UserFormState): Promise<UserT
     const errorData = await res.json();
     throw new Error(errorData.error || 'Failed to create user');
   }
-  return res.json();
+  const data = await res.json();
+  return {
+    ...data,
+    id: data.id || data._id || ''
+  };
 };
 
 const deleteUser = async (token: string, userId: string): Promise<void> => {
@@ -69,6 +78,23 @@ const deleteUser = async (token: string, userId: string): Promise<void> => {
     headers: { 'Authorization': `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to delete user');
+};
+
+const updateUser = async (token: string, userId: string, userData: UserFormState): Promise<UserType> => {
+  const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error || 'Failed to update user');
+  }
+  const data = await res.json();
+  return {
+    ...data,
+    id: data.id || data._id || ''
+  };
 };
 
 export default function AdminUsers() {
@@ -96,9 +122,21 @@ export default function AdminUsers() {
     },
   });
 
+  const editUserMutation = useMutation<UserType, Error, { id: string, data: UserFormState }>({
+    mutationFn: ({ id, data }) => updateUser(token!, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setShowEditDialog(false);
+      setEditingUser(null);
+    },
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [editForm, setEditForm] = useState<UserFormState>({});
   const [newUser, setNewUser] = useState<UserFormState>({
     name: '',
     email: '',
@@ -121,6 +159,31 @@ export default function AdminUsers() {
 
   const handleCreateUser = () => {
     createUserMutation.mutate(newUser);
+  };
+
+  const handleEditUser = (user: UserType) => {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      accountType: user.accountType,
+      registrationNumber: user.registrationNumber,
+      program: user.program,
+      department: user.department,
+      nationality: user.nationality,
+      gender: user.gender,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      startYear: user.startYear,
+      endYear: user.endYear
+    });
+    setShowEditDialog(true);
+  };
+
+  const confirmEditUser = () => {
+    if (editingUser) {
+      editUserMutation.mutate({ id: editingUser.id, data: editForm });
+    }
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -264,7 +327,12 @@ export default function AdminUsers() {
                   </div>
 
                   <div className="flex gap-2 mt-4 pt-4 border-t">
-                    <Button variant="outline" size="sm" className="flex-1" disabled>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1" 
+                      onClick={() => handleEditUser(user)}
+                    >
                       <Edit className="w-3 h-3 mr-1" />
                       Edit
                     </Button>
@@ -411,6 +479,182 @@ export default function AdminUsers() {
                   </>
                 ) : (
                   'Create User'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Update user information. Leave password blank to keep current password.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editForm.name || ''}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email Address</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editForm.email || ''}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">New Password (optional)</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  value={editForm.password || ''}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  placeholder="Leave blank to keep current"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select
+                  value={editForm.accountType}
+                  onValueChange={(value: UserRole) => setEditForm({ ...editForm, accountType: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">Student</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editForm.accountType === 'student' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-studentId">Registration Number</Label>
+                    <Input
+                      id="edit-studentId"
+                      value={editForm.registrationNumber || ''}
+                      onChange={(e) => setEditForm({ ...editForm, registrationNumber: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-program">Program</Label>
+                    <Input
+                      id="edit-program"
+                      value={editForm.program || ''}
+                      onChange={(e) => setEditForm({ ...editForm, program: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-nationality">Nationality</Label>
+                    <Input
+                      id="edit-nationality"
+                      value={editForm.nationality || ''}
+                      onChange={(e) => setEditForm({ ...editForm, nationality: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-gender">Gender</Label>
+                    <Select
+                      value={editForm.gender}
+                      onValueChange={(value) => setEditForm({ ...editForm, gender: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phone">Phone Number</Label>
+                    <Input
+                      id="edit-phone"
+                      value={editForm.phoneNumber || ''}
+                      onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-address">Address</Label>
+                    <Input
+                      id="edit-address"
+                      value={editForm.address || ''}
+                      onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-startYear">Start Year</Label>
+                      <Input
+                        id="edit-startYear"
+                        value={editForm.startYear || ''}
+                        onChange={(e) => setEditForm({ ...editForm, startYear: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-endYear">End Year</Label>
+                      <Input
+                        id="edit-endYear"
+                        value={editForm.endYear || ''}
+                        onChange={(e) => setEditForm({ ...editForm, endYear: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {editForm.accountType === 'staff' && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-department">Department</Label>
+                  <Select
+                    value={editForm.department}
+                    onValueChange={(value: Department) => setEditForm({ ...editForm, department: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dept) => (
+                        <SelectItem key={dept.value} value={dept.value}>
+                          {dept.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="gradient-primary" 
+                onClick={confirmEditUser}
+                disabled={editUserMutation.isPending}
+              >
+                {editUserMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
                 )}
               </Button>
             </DialogFooter>

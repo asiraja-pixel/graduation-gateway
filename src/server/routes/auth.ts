@@ -2,15 +2,28 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import { User } from '../models/User.js';
+import { User, IUser } from '../models/User.js';
 import { emailService } from '../services/EmailService.js';
 
 const router = express.Router();
 
 // Generate JWT token
-const generateToken = (userId: string, accountType: string) => {
+const generateToken = (user: IUser) => {
   return jwt.sign(
-    { id: userId, accountType },
+    { 
+      id: user._id.toString(), 
+      accountType: user.accountType, 
+      department: user.department,
+      name: user.name,
+      registrationNumber: user.registrationNumber,
+      program: user.program,
+      nationality: user.nationality,
+      gender: user.gender,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      startYear: user.startYear,
+      endYear: user.endYear
+    },
     process.env.JWT_SECRET || 'fallback-secret',
     { expiresIn: '24h' }
   );
@@ -24,7 +37,21 @@ router.post('/signup', async (req, res) => {
   console.log('Database ReadyState:', mongoose.connection.readyState);
   
   try {
-    const { name, email, registrationNumber, password, accountType, program, department } = req.body;
+    const { 
+      name, 
+      email, 
+      registrationNumber, 
+      password, 
+      accountType, 
+      program, 
+      department,
+      nationality,
+      gender,
+      phoneNumber,
+      address,
+      startYear,
+      endYear
+    } = req.body;
 
     // Validate required fields
     if (!name || !email || !registrationNumber || !password || !accountType) {
@@ -34,10 +61,12 @@ router.post('/signup', async (req, res) => {
     }
 
     // Validate account type specific fields
-    if (accountType === 'student' && !program) {
-      return res.status(400).json({ 
-        error: 'Program is required for student accounts' 
-      });
+    if (accountType === 'student') {
+      if (!program || !nationality || !gender || !phoneNumber || !address || !startYear || !endYear) {
+        return res.status(400).json({ 
+          error: 'All student details (program, nationality, gender, phone, address, years) are required' 
+        });
+      }
     }
 
     if (accountType === 'staff' && !department) {
@@ -48,8 +77,8 @@ router.post('/signup', async (req, res) => {
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { registrationNumber }]
-    });
+      $or: [{ email: email.toLowerCase() }, { registrationNumber }]
+    }) as IUser | null;
 
     if (existingUser) {
       return res.status(400).json({ 
@@ -63,31 +92,43 @@ router.post('/signup', async (req, res) => {
     // Create new user
     const newUser = new User({
       name,
-      email,
+      email: email.toLowerCase(),
       registrationNumber,
       password: hashedPassword,
       accountType,
       program: accountType === 'student' ? program : undefined,
-      department: accountType === 'staff' ? department : undefined
+      department: accountType === 'staff' ? department : undefined,
+      nationality: accountType === 'student' ? nationality : undefined,
+      gender: accountType === 'student' ? gender : undefined,
+      phoneNumber: accountType === 'student' ? phoneNumber : undefined,
+      address: accountType === 'student' ? address : undefined,
+      startYear: accountType === 'student' ? startYear : undefined,
+      endYear: accountType === 'student' ? endYear : undefined
     });
 
     await newUser.save();
     console.log('✅ User saved successfully with ID:', newUser._id);
-    console.log('Saved to collection:', newUser.collection.name);
+    console.log('Saved to collection:', (newUser.collection as mongoose.Collection).name);
 
     // Return user without password
     const userResponse = {
-      id: newUser._id,
+      id: (newUser._id as unknown as string).toString(),
       name: newUser.name,
       email: newUser.email,
       registrationNumber: newUser.registrationNumber,
       accountType: newUser.accountType,
       program: newUser.program,
-      department: newUser.department
+      department: newUser.department,
+      nationality: newUser.nationality,
+      gender: newUser.gender,
+      phoneNumber: newUser.phoneNumber,
+      address: newUser.address,
+      startYear: newUser.startYear,
+      endYear: newUser.endYear
     };
 
     // Generate JWT token
-    const token = generateToken(newUser._id.toString(), newUser.accountType);
+    const token = generateToken(newUser);
 
     // Send welcome email
     try {
@@ -134,7 +175,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase() }) as IUser | null;
     console.log('User found in DB:', user ? user.email : 'NOT FOUND');
 
     if (!user) {
@@ -156,17 +197,23 @@ router.post('/login', async (req, res) => {
 
     // Return user without password
     const userResponse = {
-      id: user._id,
+      id: (user._id as unknown as string).toString(),
       name: user.name,
       email: user.email,
       registrationNumber: user.registrationNumber,
       accountType: user.accountType,
       program: user.program,
-      department: user.department
+      department: user.department,
+      nationality: user.nationality,
+      gender: user.gender,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+      startYear: user.startYear,
+      endYear: user.endYear
     };
 
     // Generate JWT token
-    const token = generateToken(user._id.toString(), user.accountType);
+    const token = generateToken(user);
 
     res.json({
       message: 'Login successful',
@@ -174,12 +221,13 @@ router.post('/login', async (req, res) => {
       token
     });
 
-  } catch (error: any) {
-    console.error('CRITICAL Login error:', error);
-    console.error('Error stack:', error.stack);
+  } catch (error) {
+    const err = error as Error;
+    console.error('CRITICAL Login error:', err);
+    console.error('Error stack:', err.stack);
     res.status(500).json({ 
       error: 'Internal server error during login',
-      details: error.message
+      details: err.message
     });
   }
 });
@@ -196,7 +244,7 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }) as IUser | null;
     
     if (!user) {
       // Don't reveal if email exists for security
@@ -206,17 +254,17 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     // Generate reset token (in production, you'd use a proper token service)
-    const resetToken = generateToken(user._id.toString(), user.accountType);
+    const resetToken = generateToken(user);
     
     // Dynamic frontend URL configuration
-    const getFrontendUrl = (req: any) => {
+    const getFrontendUrl = (reqObj: express.Request) => {
       // Check if FRONTEND_URL is explicitly set in environment
       if (process.env.FRONTEND_URL && process.env.FRONTEND_URL !== 'undefined') {
         return process.env.FRONTEND_URL.replace(/\/$/, ''); // Remove trailing slash
       }
       
       // Development fallbacks - try common ports
-      const host = req?.get('host') || 'localhost:4000'; // Fallback to backend host
+      const host = reqObj?.get('host') || 'localhost:4000'; // Fallback to backend host
       
       // Try common frontend ports
       const frontendPorts = [8080, 8081, 3000, 5173];
@@ -275,7 +323,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { id: string };
     
     if (!decoded || !decoded.id) {
       return res.status(400).json({ 
@@ -283,8 +331,8 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    // Find user by ID
-    const user = await User.findById(decoded.id);
+    // Find user by id
+    const user = await User.findById(decoded.id) as IUser | null;
     
     if (!user) {
       return res.status(400).json({ 

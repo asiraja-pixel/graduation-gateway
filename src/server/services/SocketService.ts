@@ -22,7 +22,7 @@ export class SocketService {
     this.io = new SocketIOServer(server, {
       cors: {
         origin: allowedFrontend,
-        methods: ["GET", "POST"]
+        methods: ["GET", "POST", "PATCH", "PUT", "DELETE"]
       }
     });
 

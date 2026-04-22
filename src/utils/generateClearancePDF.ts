@@ -23,6 +23,10 @@ export async function generateClearancePDF(
     program?: string;
     nationality?: string;
     gender?: string;
+    phoneNumber?: string;
+    address?: string;
+    startYear?: string;
+    endYear?: string;
   },
   request: ClearanceRequest,
   onProgress?: (stage: string) => void

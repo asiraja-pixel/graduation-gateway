@@ -16,6 +16,16 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
       icon: CheckCircle,
       label: 'Approved',
     },
+    completed: {
+      classes: 'status-approved',
+      icon: CheckCircle,
+      label: 'Completed',
+    },
+    in_progress: {
+      classes: 'status-pending',
+      icon: Clock,
+      label: 'In Progress',
+    },
     pending: {
       classes: 'status-pending',
       icon: Clock,

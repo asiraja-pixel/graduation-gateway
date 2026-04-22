@@ -9,6 +9,10 @@ interface ClearanceFormTemplateProps {
     program?: string;
     nationality?: string;
     gender?: string;
+    phoneNumber?: string;
+    address?: string;
+    startYear?: string;
+    endYear?: string;
   };
   request: ClearanceRequest;
 }
@@ -65,19 +69,21 @@ interface DeptSectionProps {
     staffName?: string;
     comment?: string;
     processedAt?: string;
+    timestamp?: string | Date;
   };
 }
 
 const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
-  const date = clearance?.processedAt
-    ? new Date(clearance.processedAt).toLocaleDateString('en-GB')
+  const dateValue = clearance?.processedAt || clearance?.timestamp;
+  const date = dateValue
+    ? new Date(dateValue).toLocaleDateString('en-GB')
     : '';
 
   return (
     <div style={{ marginBottom: '4px' }}>
       <div style={sectionTitleStyle}>{title}</div>
       <div style={rowStyle}>
-        <span style={labelStyle}>(Comment)</span>
+        <span style={labelStyle}>Comment</span>
         <span style={{ ...fieldStyle, flex: 1 }}>
           {clearance?.status === 'approved'
             ? clearance?.comment || 'Cleared'
@@ -109,10 +115,36 @@ const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
 
 const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemplateProps>(
   ({ user, request }, ref) => {
-    const depts = request.departmentClearances as any;
+    const depts = request.departmentClearances;
     const submittedDate = request.submittedAt
       ? new Date(request.submittedAt).toLocaleDateString('en-GB')
       : '';
+
+    // Function to get school/department based on program
+    const getSchoolFromProgram = (program?: string) => {
+      if (!program) return '';
+      
+      const mapping: Record<string, string> = {
+        'Bachelor of Arts in Islamic Sharia': 'School of Sharia & Islamic Studies',
+        'Bachelor of Arts in Arabic Language': 'School of Sharia & Islamic Studies',
+        'Diploma in Islamic Banking and Finance': 'School of Sharia & Islamic Studies',
+        'Diploma in Islamic Psychology': 'School of Sharia & Islamic Studies',
+        'Diploma in Arabic Language and Islamic Studies': 'School of Sharia & Islamic Studies',
+        'Certificate in Islamic Banking and Finance': 'School of Sharia & Islamic Studies',
+        'Certificate in Arabic Language and Islamic Studies': 'School of Sharia & Islamic Studies',
+        'Bachelor of Business Management': 'School of Business Management',
+        'Diploma in Business Management': 'School of Business Management',
+        'Certificate in Business Management': 'School of Business Management',
+        'Bachelor of Education (B.Ed)': 'School of Education',
+        'Bachelor of Information Technology': 'School of Informatics & Technology',
+        'Diploma in Business Information Technology': 'School of Informatics & Technology',
+        'Computer Science': 'School of Informatics & Technology' // Fallback for existing data
+      };
+      
+      return mapping[program] || '';
+    };
+
+    const schoolName = getSchoolFromProgram(user.program);
 
     return (
       <div
@@ -181,8 +213,8 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
               { label: 'Nationality:', value: user.nationality || '' },
               { label: 'Gender:', value: user.gender || '' },
               { label: 'Email:', value: user.email },
-              { label: 'Phone:', value: '' },
-              { label: 'Address:', value: '' },
+              { label: 'Phone:', value: user.phoneNumber || '' },
+              { label: 'Address:', value: user.address || '' },
             ].map(({ label, value }) => (
               <div key={label} style={{ ...rowStyle, marginBottom: '6px' }}>
                 <span style={{ ...labelStyle, minWidth: '90px' }}>{label}</span>
@@ -217,10 +249,10 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
         <div style={{ marginBottom: '8px' }}>
           <div style={sectionTitleStyle}>STUDENT ACADEMIC INFORMATION:</div>
           {[
-            { label: 'Name Of Department:', value: '' },
+            { label: 'Name Of Department:', value: schoolName },
             { label: 'Name Of Programme:', value: user.program || '' },
-            { label: 'Year Started:', value: '' },
-            { label: 'Year Ending:', value: '' },
+            { label: 'Year Started:', value: user.startYear || '' },
+            { label: 'Year Ending:', value: user.endYear || '' },
           ].map(({ label, value }) => (
             <div key={label} style={{ ...rowStyle, marginBottom: '6px' }}>
               <span style={{ ...labelStyle, minWidth: '140px' }}>{label}</span>

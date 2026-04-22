@@ -5,9 +5,15 @@ export interface IUser extends Document {
   email: string;
   password: string;
   registrationNumber: string;
-  accountType: 'student' | 'staff';
+  accountType: 'student' | 'staff' | 'admin';
   program?: string;
   department?: string;
+  nationality?: string;
+  gender?: string;
+  phoneNumber?: string;
+  address?: string;
+  startYear?: string;
+  endYear?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +57,42 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: function(this: IUser) {
       return this.accountType === 'staff';
+    }
+  },
+  nationality: {
+    type: String,
+    required: function(this: IUser) {
+      return this.accountType === 'student';
+    }
+  },
+  gender: {
+    type: String,
+    required: function(this: IUser) {
+      return this.accountType === 'student';
+    }
+  },
+  phoneNumber: {
+    type: String,
+    required: function(this: IUser) {
+      return this.accountType === 'student';
+    }
+  },
+  address: {
+    type: String,
+    required: function(this: IUser) {
+      return this.accountType === 'student';
+    }
+  },
+  startYear: {
+    type: String,
+    required: function(this: IUser) {
+      return this.accountType === 'student';
+    }
+  },
+  endYear: {
+    type: String,
+    required: function(this: IUser) {
+      return this.accountType === 'student';
     }
   }
 }, {

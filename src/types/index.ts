@@ -12,14 +12,21 @@ export type Department =
 
 export interface User {
   id: string;
+  _id?: string; // MongoDB compatibility
   email: string;
   name: string;
   role: UserRole;
   accountType: UserRole; // For API compatibility
   registrationNumber: string; // For API compatibility
-  department?: string; // For staff members
+  department?: Department; // For staff members
   studentId?: string; // For students
   program?: string; // For students
+  nationality?: string;
+  gender?: string;
+  phoneNumber?: string;
+  address?: string;
+  startYear?: string;
+  endYear?: string;
 }
 
 export interface DepartmentClearance {
@@ -33,6 +40,7 @@ export interface DepartmentClearance {
 
 export interface ClearanceRequest {
   id: string;
+  _id?: string; // MongoDB compatibility
   studentId: string;
   studentName: string;
   registrationNumber: string; // Matches backend field name

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building, Shield } from 'lucide-react';
+import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Signup() {
@@ -14,12 +14,56 @@ export default function Signup() {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [accountType, setAccountType] = useState<'student' | 'staff' /* | 'admin' */>('student');
+  const [accountType, setAccountType] = useState<'student' | 'staff'>('student');
   const [department, setDepartment] = useState('');
+  const [program, setProgram] = useState('');
+  const [nationality, setNationality] = useState('');
+  const [gender, setGender] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [address, setAddress] = useState('');
+  const [startYear, setStartYear] = useState('');
+  const [endYear, setEndYear] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signup, isAuthenticated, user } = useAuth();
+
+  // Schools and Programs Mapping
+  const schoolPrograms = [
+    {
+      school: 'School of Sharia & Islamic Studies',
+      programs: [
+        'Bachelor of Arts in Islamic Sharia',
+        'Bachelor of Arts in Arabic Language',
+        'Diploma in Islamic Banking and Finance',
+        'Diploma in Islamic Psychology',
+        'Diploma in Arabic Language and Islamic Studies',
+        'Certificate in Islamic Banking and Finance',
+        'Certificate in Arabic Language and Islamic Studies'
+      ]
+    },
+    {
+      school: 'School of Business Management',
+      programs: [
+        'Bachelor of Business Management',
+        'Diploma in Business Management',
+        'Certificate in Business Management'
+      ]
+    },
+    {
+      school: 'School of Education',
+      programs: [
+        'Bachelor of Education (B.Ed)'
+      ]
+    },
+    {
+      school: 'School of Informatics & Technology',
+      programs: [
+        'Bachelor of Information Technology',
+        'Diploma in Business Information Technology'
+      ]
+    }
+  ];
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -38,7 +82,7 @@ export default function Signup() {
     { value: 'registrar', label: 'Registrar' }
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -66,15 +110,33 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      let result;
+      type SignupResult = { success: boolean; error?: string };
+      let result: SignupResult;
       
       if (accountType === 'student') {
-        result = await signup(name, email, registrationNumber, password, accountType, 'Computer Science'); // Default program, can be made dynamic
-      } else /* if (accountType === 'staff') */ {
+        if (!program || !nationality || !gender || !phoneNumber || !address || !startYear || !endYear) {
+          setError('Please fill in all student details');
+          setIsLoading(false);
+          return;
+        }
+        result = await signup(
+          name, 
+          email, 
+          registrationNumber, 
+          password, 
+          accountType, 
+          program, 
+          undefined,
+          nationality,
+          gender,
+          phoneNumber,
+          address,
+          startYear,
+          endYear
+        );
+      } else {
         result = await signup(name, email, registrationNumber, password, accountType, undefined, department);
-      } /* else { // Admin
-        result = await signup(name, email, registrationNumber, password, accountType);
-      } */
+      }
       
       if (result.success) {
         // On success, redirect to login
@@ -118,18 +180,39 @@ export default function Signup() {
         </div>
 
         <div className="flex gap-8 text-primary-foreground">
+
           <div>
+
             <div className="text-3xl font-bold">4+</div>
+
+            <div className="text-sm opacity-70">Schools</div>
+
+          </div>
+
+          <div>
+
+            <div className="text-3xl font-bold">13+</div>
+
             <div className="text-sm opacity-70">Programs</div>
+
           </div>
+
           <div>
-            <div className="text-3xl font-bold">6</div>
-            <div className="text-sm opacity-70">Departments</div>
+
+            <div className="text-3xl font-bold">100%</div>
+
+            <div className="text-sm opacity-70">Digital Process</div>
+
           </div>
+
           <div>
+
             <div className="text-3xl font-bold">24/7</div>
-            <div className="text-sm opacity-70">Support</div>
+
+            <div className="text-sm opacity-70">Access</div>
+
           </div>
+
         </div>
       </div>
 
@@ -182,7 +265,7 @@ export default function Signup() {
                 {/* Account Type Selection */}
                 <div className="space-y-2">
                   <Label>Account Type</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       type="button"
                       variant={accountType === 'student' ? 'default' : 'outline'}
@@ -201,15 +284,6 @@ export default function Signup() {
                       <Briefcase className="w-4 h-4" />
                       Staff
                     </Button>
-                    {/* <Button
-                      type="button"
-                      variant={accountType === 'admin' ? 'default' : 'outline'}
-                      onClick={() => setAccountType('admin')}
-                      className="flex items-center gap-2"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Admin
-                    </Button> */}
                   </div>
                 </div>
 
@@ -250,14 +324,14 @@ export default function Signup() {
                 {/* Registration Number Field */}
                 <div className="space-y-2">
                   <Label htmlFor="registrationNumber">
-                    {accountType === 'student' ? 'Student ID' : 'Staff ID' /* (accountType === 'staff' ? 'Staff ID' : 'Admin ID') */}
+                    {accountType === 'student' ? 'Student ID' : 'Staff ID'}
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="registrationNumber"
                       type="text"
-                      placeholder={accountType === 'student' ? 'STU2024001' : 'STAFF001' /* (accountType === 'staff' ? 'STAFF001' : 'ADMIN001') */}
+                      placeholder={accountType === 'student' ? 'STU2024001' : 'STAFF001'}
                       value={registrationNumber}
                       onChange={(e) => setRegistrationNumber(e.target.value)}
                       className="pl-10"
@@ -265,6 +339,110 @@ export default function Signup() {
                     />
                   </div>
                 </div>
+
+                {/* Student Specific Fields */}
+                {accountType === 'student' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="program">Program of Study</Label>
+                      <div className="relative">
+                        <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                        <Select value={program} onValueChange={setProgram}>
+                          <SelectTrigger className="pl-10">
+                            <SelectValue placeholder="Select your program" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {schoolPrograms.map((school) => (
+                              <div key={school.school}>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                                  {school.school}
+                                </div>
+                                {school.programs.map((prog) => (
+                                  <SelectItem key={prog} value={prog}>
+                                    {prog}
+                                  </SelectItem>
+                                ))}
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="nationality">Nationality</Label>
+                        <Input
+                          id="nationality"
+                          placeholder="e.g. Kenyan"
+                          value={nationality}
+                          onChange={(e) => setNationality(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select value={gender} onValueChange={setGender}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Input
+                        id="phoneNumber"
+                        placeholder="e.g. +254 700 000000"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        placeholder="e.g. P.O. Box 123, Nairobi"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="startYear">Start Year</Label>
+                        <Input
+                          id="startYear"
+                          type="number"
+                          placeholder="2020"
+                          value={startYear}
+                          onChange={(e) => setStartYear(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="endYear">End Year</Label>
+                        <Input
+                          id="endYear"
+                          type="number"
+                          placeholder="2024"
+                          value={endYear}
+                          onChange={(e) => setEndYear(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Department Field - Only for Staff */}
                 {accountType === 'staff' && (

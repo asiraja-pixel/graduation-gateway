@@ -75,7 +75,13 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       studentId: req.user!.id,
       studentName: req.user!.name,
       registrationNumber: req.user!.registrationNumber,
-      program: req.user!.program
+      program: req.user!.program,
+      nationality: req.user!.nationality,
+      gender: req.user!.gender,
+      phoneNumber: req.user!.phoneNumber,
+      address: req.user!.address,
+      startYear: req.user!.startYear,
+      endYear: req.user!.endYear
     });
 
     await clearanceRequest.save();

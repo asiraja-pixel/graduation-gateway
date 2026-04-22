@@ -113,7 +113,15 @@ export default function Login() {
 
             <div className="text-3xl font-bold">4+</div>
 
-            <div className="text-sm opacity-70">Departments</div>
+            <div className="text-sm opacity-70">Schools</div>
+
+          </div>
+
+          <div>
+
+            <div className="text-3xl font-bold">13+</div>
+
+            <div className="text-sm opacity-70">Programs</div>
 
           </div>
 

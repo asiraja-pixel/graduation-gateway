@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 import { User } from '@/types';
 
@@ -9,7 +9,21 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (name: string, email: string, registrationNumber: string, password: string, accountType: string, program?: string, department?: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (
+    name: string, 
+    email: string, 
+    registrationNumber: string, 
+    password: string, 
+    accountType: string, 
+    program?: string, 
+    department?: string,
+    nationality?: string,
+    gender?: string,
+    phoneNumber?: string,
+    address?: string,
+    startYear?: string,
+    endYear?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -62,20 +76,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (response.ok) {
+        const userData = data.user;
         const user: User = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: data.user.accountType,
-          accountType: data.user.accountType,
-          registrationNumber: data.user.registrationNumber,
-          studentId: data.user.registrationNumber,
-          program: data.user.program,
-          department: data.user.department,
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.accountType,
+          accountType: userData.accountType,
+          registrationNumber: userData.registrationNumber,
+          studentId: userData.registrationNumber,
+          program: userData.program,
+          department: userData.department,
+          nationality: userData.nationality,
+          gender: userData.gender,
+          phoneNumber: userData.phoneNumber,
+          address: userData.address,
+          startYear: userData.startYear,
+          endYear: userData.endYear,
         };
 
         // Extract token from response if available
-        const token = data.token || data.user.token;
+        const token = (data.token || userData.token) as string;
         
         setUser(user);
         setToken(token);
@@ -87,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       return { success: false, error: data.error || 'Login failed' };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: 'Network error or server unavailable' };
     }
@@ -100,7 +121,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string, 
     accountType: string,
     program?: string,
-    department?: string
+    department?: string,
+    nationality?: string,
+    gender?: string,
+    phoneNumber?: string,
+    address?: string,
+    startYear?: string,
+    endYear?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
@@ -114,37 +141,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           registrationNumber, 
           password, 
           accountType,
-          program: accountType === 'student' ? program : undefined,
-          department: accountType === 'staff' ? department : undefined
+          program,
+          department,
+          nationality,
+          gender,
+          phoneNumber,
+          address,
+          startYear,
+          endYear
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        const userData = data.user;
         const user: User = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: data.user.accountType,
-          accountType: data.user.accountType,
-          registrationNumber: data.user.registrationNumber,
-          studentId: data.user.registrationNumber,
-          program: data.user.program,
-          department: data.user.department,
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.accountType,
+          accountType: userData.accountType,
+          registrationNumber: userData.registrationNumber,
+          studentId: userData.registrationNumber,
+          program: userData.program,
+          department: userData.department,
+          nationality: userData.nationality,
+          gender: userData.gender,
+          phoneNumber: userData.phoneNumber,
+          address: userData.address,
+          startYear: userData.startYear,
+          endYear: userData.endYear,
         };
 
         setUser(user);
-        setToken(data.token || data.user.token);
+        const token = (data.token || userData.token) as string;
+        setToken(token);
         localStorage.setItem('clearance_user', JSON.stringify(user));
-        if (data.token || data.user.token) {
-          localStorage.setItem('clearance_token', data.token || data.user.token);
+        if (token) {
+          localStorage.setItem('clearance_token', token);
         }
         return { success: true };
       }
       
       return { success: false, error: data.error || 'Signup failed' };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Signup error:', error);
       return { success: false, error: 'Network error or server unavailable' };
     }
