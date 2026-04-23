@@ -1,13 +1,13 @@
-import express from 'express';
+import express, { Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { User } from '../models/User.js';
+import { User, IUser } from '../models/User.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Middleware to check if user is admin
-const isAdmin = (req: AuthRequest, res: express.Response, next: express.NextFunction) => {
-  if (req.user?.accountType !== 'admin') {
+const isAdmin = (_req: AuthRequest, res: Response, next: express.NextFunction) => {
+  if (_req.user?.accountType !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();
@@ -25,7 +25,7 @@ router.get('/', authenticateToken, isAdmin, async (req, res) => {
 });
 
 // GET /api/users/:id - Get user by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateToken, async (req: AuthRequest, res: express.Response) => {
   try {
     const user = await User.findById(req.params.id, '-password');
     
@@ -46,7 +46,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // POST /api/users - Create a new user (admin only)
-router.post('/', authenticateToken, isAdmin, async (req, res) => {
+router.post('/', authenticateToken, isAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { 
       name, email, password, registrationNumber, accountType, 
@@ -87,18 +87,19 @@ router.post('/', authenticateToken, isAdmin, async (req, res) => {
 
     await newUser.save();
     
-    const userResponse = newUser.toObject();
-    delete (userResponse as any).password;
+    const userResponse = newUser.toObject() as unknown as Record<string, unknown>;
+    const { password: _, ...result } = userResponse;
     
-    res.status(201).json(userResponse);
-  } catch (error: any) {
+    res.status(201).json(result);
+  } catch (error: unknown) {
     console.error('Create user error:', error);
-    res.status(400).json({ error: error.message || 'Failed to create user' });
+    const message = error instanceof Error ? error.message : 'Failed to create user';
+    res.status(400).json({ error: message });
   }
 });
 
 // PUT /api/users/:id - Update a user (admin only)
-router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
+router.put('/:id', authenticateToken, isAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { 
       name, email, password, registrationNumber, accountType, 
@@ -140,18 +141,19 @@ router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
 
     await user.save();
     
-    const userResponse = user.toObject();
-    delete (userResponse as any).password;
+    const userResponse = user.toObject() as unknown as Record<string, unknown>;
+    const { password: _, ...result } = userResponse;
     
-    res.json(userResponse);
-  } catch (error: any) {
+    res.json(result);
+  } catch (error: unknown) {
     console.error('Update user error:', error);
-    res.status(400).json({ error: error.message || 'Failed to update user' });
+    const message = error instanceof Error ? error.message : 'Failed to update user';
+    res.status(400).json({ error: message });
   }
 });
 
 // DELETE /api/users/:id - Delete a user (admin only)
-router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, isAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
