@@ -22,7 +22,8 @@ const generateToken = (user: IUser) => {
       phoneNumber: user.phoneNumber,
       address: user.address,
       startYear: user.startYear,
-      endYear: user.endYear
+      endYear: user.endYear,
+      signature: user.signature
     },
     process.env.JWT_SECRET || 'fallback-secret',
     { expiresIn: '24h' }
@@ -50,7 +51,8 @@ router.post('/signup', async (req, res) => {
       phoneNumber,
       address,
       startYear,
-      endYear
+      endYear,
+      signature
     } = req.body;
 
     // Validate required fields
@@ -69,10 +71,12 @@ router.post('/signup', async (req, res) => {
       }
     }
 
-    if (accountType === 'staff' && !department) {
-      return res.status(400).json({ 
-        error: 'Department is required for staff accounts' 
-      });
+    if (accountType === 'staff') {
+      if (!department || !signature) {
+        return res.status(400).json({ 
+          error: 'Department and signature are required for staff accounts' 
+        });
+      }
     }
 
     // Check if user already exists
@@ -103,7 +107,8 @@ router.post('/signup', async (req, res) => {
       phoneNumber: accountType === 'student' ? phoneNumber : undefined,
       address: accountType === 'student' ? address : undefined,
       startYear: accountType === 'student' ? startYear : undefined,
-      endYear: accountType === 'student' ? endYear : undefined
+      endYear: accountType === 'student' ? endYear : undefined,
+      signature: accountType === 'staff' ? signature : undefined
     });
 
     await newUser.save();
@@ -124,7 +129,8 @@ router.post('/signup', async (req, res) => {
       phoneNumber: newUser.phoneNumber,
       address: newUser.address,
       startYear: newUser.startYear,
-      endYear: newUser.endYear
+      endYear: newUser.endYear,
+      signature: newUser.signature
     };
 
     // Generate JWT token
@@ -209,7 +215,8 @@ router.post('/login', async (req, res) => {
       phoneNumber: user.phoneNumber,
       address: user.address,
       startYear: user.startYear,
-      endYear: user.endYear
+      endYear: user.endYear,
+      signature: user.signature
     };
 
     // Generate JWT token

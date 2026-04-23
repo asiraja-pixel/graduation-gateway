@@ -18,12 +18,12 @@ import {
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { User } from '@/types';
+import { User, ClearanceRequest } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Fetch functions
-const fetchUsers = async (token: string) => {
+const fetchUsers = async (token: string): Promise<User[]> => {
   const res = await fetch(`${API_BASE_URL}/api/users`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -31,12 +31,17 @@ const fetchUsers = async (token: string) => {
   return res.json();
 };
 
-const fetchRequests = async (token: string) => {
+const fetchRequests = async (token: string): Promise<ClearanceRequest[]> => {
   const res = await fetch(`${API_BASE_URL}/api/clearance-requests`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch clearance requests');
-  return res.json();
+  const data = await res.json();
+  // Normalize MongoDB _id to id for unique keys
+  return (data as (ClearanceRequest & { _id?: string })[]).map(d => ({
+    ...d,
+    id: d.id || d._id || Math.random().toString(36).slice(2, 11)
+  })) as ClearanceRequest[];
 };
 
 export default function AdminDashboard() {
@@ -48,7 +53,7 @@ export default function AdminDashboard() {
     enabled: !!token
   });
 
-  const { data: requests = [], isLoading: isLoadingRequests, error: requestsError } = useQuery<any[], Error>({
+  const { data: requests = [], isLoading: isLoadingRequests, error: requestsError } = useQuery<ClearanceRequest[], Error>({
     queryKey: ['requests'], 
     queryFn: () => fetchRequests(token!),
     enabled: !!token

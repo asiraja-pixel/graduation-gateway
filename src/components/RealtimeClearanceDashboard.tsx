@@ -1,29 +1,20 @@
-import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSocket } from '@/contexts/SocketContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Department, ClearanceStatus } from '@/types';
-
-const DEPARTMENT_COLORS: Record<Department, string> = {
-  library: 'bg-blue-100 text-blue-800',
-  finance: 'bg-green-100 text-green-800',
-  accommodation: 'bg-purple-100 text-purple-800',
-  it: 'bg-orange-100 text-orange-800',
-  academic: 'bg-red-100 text-red-800'
-};
+import { Department, ClearanceStatus, ClearanceRequest, DepartmentClearance } from '@/types';
 
 const STATUS_COLORS: Record<ClearanceStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800'
+  rejected: 'bg-red-100 text-red-800',
+  completed: 'bg-blue-100 text-blue-800'
 };
 
 export default function RealtimeClearanceDashboard() {
   const { user } = useAuth();
   const { requests, updateDepartmentStatus, isConnected } = useSocket();
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   const handleStatusUpdate = (requestId: string, department: Department, status: ClearanceStatus) => {
     const comment = prompt(`Enter comment for ${status} action:`);
@@ -77,7 +68,7 @@ export default function RealtimeClearanceDashboard() {
               </CardContent>
             </Card>
           ) : (
-            requests.map((request) => (
+            requests.map((request: ClearanceRequest) => (
               <Card key={request._id} className="mb-6">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -98,25 +89,25 @@ export default function RealtimeClearanceDashboard() {
                 <CardContent>
                   <h4 className="font-semibold mb-4">Department Status</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(request.departmentClearances).map(([dept, clearance]: [string, any]) => (
+                    {Object.entries(request.departmentClearances).map(([dept, clearance]) => (
                       <div key={dept} className="border rounded-lg p-4">
                         <div className="flex justify-between items-center mb-2">
                           <h5 className="font-medium capitalize">{dept}</h5>
-                          {getStatusBadge(clearance.status as ClearanceStatus)}
+                          {getStatusBadge((clearance as DepartmentClearance).status as ClearanceStatus)}
                         </div>
-                        {clearance.timestamp && (
+                        {(clearance as DepartmentClearance).timestamp && (
                           <p className="text-xs text-muted-foreground mb-1">
-                            Updated: {new Date(clearance.timestamp).toLocaleString()}
+                            Updated: {new Date((clearance as DepartmentClearance).timestamp!).toLocaleString()}
                           </p>
                         )}
-                        {clearance.staffName && (
+                        {(clearance as DepartmentClearance).staffName && (
                           <p className="text-sm text-muted-foreground">
-                            By: {clearance.staffName}
+                            By: {(clearance as DepartmentClearance).staffName}
                           </p>
                         )}
-                        {clearance.comment && (
+                        {(clearance as DepartmentClearance).comment && (
                           <p className="text-sm mt-2 p-2 bg-gray-50 rounded">
-                            {clearance.comment}
+                            {(clearance as DepartmentClearance).comment}
                           </p>
                         )}
                       </div>
@@ -152,7 +143,7 @@ export default function RealtimeClearanceDashboard() {
               </CardContent>
             </Card>
           ) : (
-            requests.map((request) => (
+            requests.map((request: ClearanceRequest) => (
               <Card key={request._id} className="mb-6">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -173,38 +164,38 @@ export default function RealtimeClearanceDashboard() {
                 <CardContent>
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-semibold">Your Department Status</h4>
-                    {request.departmentClearances[user.department!] && (
-                      getStatusBadge((request.departmentClearances[user.department!] as any).status as ClearanceStatus)
+                    {(request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] && (
+                      getStatusBadge(((request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] as DepartmentClearance).status as ClearanceStatus)
                     )}
                   </div>
                   
-                  {request.departmentClearances[user.department!]?.timestamp && (
+                  {(request.departmentClearances as Record<string, DepartmentClearance>)[user.department!]?.timestamp && (
                     <div className="mb-4 p-3 bg-gray-50 rounded">
                       <p className="text-sm text-muted-foreground">
-                        Last updated: {new Date((request.departmentClearances[user.department!] as any).timestamp).toLocaleString()}
+                        Last updated: {new Date(((request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] as DepartmentClearance).timestamp!).toLocaleString()}
                       </p>
-                      {(request.departmentClearances[user.department!] as any).comment && (
+                      {((request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] as DepartmentClearance).comment && (
                         <p className="text-sm mt-1">
-                          Comment: {(request.departmentClearances[user.department!] as any).comment}
+                          Comment: {((request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] as DepartmentClearance).comment}
                         </p>
                       )}
                     </div>
                   )}
 
                   <div className="flex gap-2">
-                    {user.department && (
+                    {user.department && request._id && (
                       <>
                         <Button
-                          onClick={() => handleStatusUpdate(request._id, user.department, 'approved')}
+                          onClick={() => handleStatusUpdate(request._id!, user.department!, 'approved')}
                           className="bg-green-600 hover:bg-green-700"
-                          disabled={(request.departmentClearances[user.department!] as any)?.status === 'approved'}
+                          disabled={((request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] as DepartmentClearance)?.status === 'approved'}
                         >
                           Approve
                         </Button>
                         <Button
-                          onClick={() => handleStatusUpdate(request._id, user.department, 'rejected')}
+                          onClick={() => handleStatusUpdate(request._id!, user.department!, 'rejected')}
                           variant="destructive"
-                          disabled={(request.departmentClearances[user.department!] as any)?.status === 'rejected'}
+                          disabled={((request.departmentClearances as Record<string, DepartmentClearance>)[user.department!] as DepartmentClearance)?.status === 'rejected'}
                         >
                           Reject
                         </Button>

@@ -29,7 +29,8 @@ export async function generateClearancePDF(
     endYear?: string;
   },
   request: ClearanceRequest,
-  onProgress?: (stage: string) => void
+  onProgress?: (stage: string) => void,
+  photoUrl?: string
 ): Promise<void> {
   onProgress?.('Preparing document…');
 
@@ -61,6 +62,7 @@ export async function generateClearancePDF(
         },
         user,
         request,
+        photoUrl,
       })
     );
   });

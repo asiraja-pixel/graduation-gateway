@@ -41,7 +41,8 @@ export async function connectToDatabase() {
         let trimmed = line.trim();
         if (!trimmed) continue;
         // remove UTF-8 BOM or stray nulls/bytes at line start
-        trimmed = trimmed.replace(/^([\uFEFF\u0000\x00])+/, '');
+        // eslint-disable-next-line no-control-regex
+        trimmed = trimmed.replace(/^[\uFEFF\x00]+/, '');
         if (trimmed.startsWith('#')) continue;
         const eq = trimmed.indexOf('=');
         if (eq === -1) continue;
@@ -78,10 +79,11 @@ export async function connectToDatabase() {
 
     await mongoose.connect(finalMongoUri as string, options);
     console.log("Connected to MongoDB database:", mongoose.connection.name);
-  } catch (error: any) {
-    console.error("MongoDB connection error:", error.message);
+  } catch (error) {
+    const err = error as Error;
+    console.error("MongoDB connection error:", err.message);
     
-    if (error.name === 'MongooseServerSelectionError') {
+    if (err.name === 'MongooseServerSelectionError') {
       console.error('\n🛡️  MONGODB ATLAS IP WHITELIST ISSUE:');
       console.error('Your current IP address is likely not whitelisted in MongoDB Atlas.');
       console.error('1. Log in to https://cloud.mongodb.com/');

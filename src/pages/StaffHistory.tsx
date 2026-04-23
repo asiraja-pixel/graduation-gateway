@@ -1,9 +1,9 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { getDepartmentLabel } from '@/types';
+import { getDepartmentLabel, DepartmentClearance } from '@/types';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 
@@ -15,11 +15,11 @@ export default function StaffHistory() {
   
   // Get requests where this staff member has processed
   const processedRequests = requests.filter(req => {
-    let deptClearance;
+    let deptClearance: DepartmentClearance | undefined;
     if (Array.isArray(req.departmentClearances)) {
-      deptClearance = req.departmentClearances.find(d => d.department === department);
+      deptClearance = (req.departmentClearances as DepartmentClearance[]).find(d => d.department === department);
     } else if (typeof req.departmentClearances === 'object') {
-      deptClearance = (req.departmentClearances as any)[department];
+      deptClearance = (req.departmentClearances as Record<string, DepartmentClearance>)[department as string];
     }
     return deptClearance && deptClearance.status !== 'pending';
   });
@@ -42,11 +42,11 @@ export default function StaffHistory() {
         {processedRequests.length > 0 ? (
           <div className="space-y-4">
             {processedRequests.map((request) => {
-              let deptClearance;
+              let deptClearance: DepartmentClearance | undefined;
               if (Array.isArray(request.departmentClearances)) {
-                deptClearance = request.departmentClearances.find(d => d.department === department);
+                deptClearance = (request.departmentClearances as DepartmentClearance[]).find(d => d.department === department);
               } else if (typeof request.departmentClearances === 'object') {
-                deptClearance = (request.departmentClearances as any)[department];
+                deptClearance = (request.departmentClearances as Record<string, DepartmentClearance>)[department as string];
               }
               return (
                 <Card key={request.id} className="card-elevated">

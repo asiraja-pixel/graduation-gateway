@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -37,7 +37,7 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-const fetchRequests = async (token: string) => {
+const fetchRequests = async (token: string): Promise<ClearanceRequest[]> => {
   const res = await fetch(`${API_BASE_URL}/api/clearance-requests`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -45,18 +45,18 @@ const fetchRequests = async (token: string) => {
   const data = await res.json();
   
   // Normalize data to ensure 'id' is present (map from MongoDB _id if needed)
-  return (data as any[]).map(d => ({
+  return (data as (ClearanceRequest & { _id?: string })[]).map(d => ({
     ...d,
-    id: d.id || d._id,
+    id: d.id || d._id || '',
     studentId: d.studentId || d.registrationNumber || '',
     // Ensure departmentClearances is always an object
     departmentClearances: Array.isArray(d.departmentClearances) 
-      ? d.departmentClearances.reduce((acc: any, dc: any) => {
+      ? (d.departmentClearances as { department: string }[]).reduce((acc: Record<string, unknown>, dc: { department: string }) => {
           if (dc.department) acc[dc.department.toLowerCase()] = dc;
           return acc;
         }, {})
       : d.departmentClearances
-  }));
+  })) as ClearanceRequest[];
 };
 
 const overrideRequestStatus = async (token: string, requestId: string, department: Department, status: ClearanceStatus) => {

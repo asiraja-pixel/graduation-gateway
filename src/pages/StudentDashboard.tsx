@@ -14,16 +14,32 @@ import {
   Download,
   Send,
   Loader2,
+  Image as ImageIcon,
+  CheckCircle2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getDepartmentLabel, Department, ClearanceStatus } from '@/types';
 import { generateClearancePDF } from '@/utils/generateClearancePDF';
+import confetti from 'canvas-confetti';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { getStudentRequest } = useClearance();
 
   const [pdfStage, setPdfStage] = useState<string | null>(null);
+  const [showPhotoDialog, setShowShowPhotoDialog] = useState(false);
+  const [studentPhoto, setStudentPhoto] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const request = user ? getStudentRequest(user.id) : undefined;
 
@@ -36,7 +52,8 @@ export default function StudentDashboard() {
           processedAt: undefined,
           staffName: undefined,
           comment: undefined,
-          staffId: undefined
+          staffId: undefined,
+          staffSignature: undefined
         }),
       }))
     : undefined;
@@ -50,9 +67,24 @@ export default function StudentDashboard() {
       }
     : null;
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setStudentPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // ── PDF download handler ──────────────────────────────────────────────────
-  const handleDownloadCertificate = async () => {
+  const handleGenerateCertificate = async () => {
     if (!user || !request) return;
+    
+    setShowShowPhotoDialog(false);
+    setPdfStage('Initializing...');
+    
     try {
       await generateClearancePDF(
         {
@@ -68,8 +100,19 @@ export default function StudentDashboard() {
           endYear: user.endYear,
         },
         request,
-        (stage) => setPdfStage(stage)
+        (stage) => setPdfStage(stage),
+        studentPhoto || undefined
       );
+
+      // Trigger confetti
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#2e7d32', '#1565c0', '#ffd700']
+      });
+
+      setShowSuccessDialog(true);
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('Failed to generate PDF. Please try again.');
@@ -254,7 +297,7 @@ export default function StudentDashboard() {
 
                     <Button
                       className="bg-status-approved hover:bg-status-approved/90 min-w-[200px]"
-                      onClick={handleDownloadCertificate}
+                      onClick={() => setShowShowPhotoDialog(true)}
                       disabled={!!pdfStage}
                     >
                       {pdfStage ? (
@@ -264,8 +307,8 @@ export default function StudentDashboard() {
                         </>
                       ) : (
                         <>
-                          <Download className="w-4 h-4 mr-2" />
-                          Download Certificate
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Generate Certificate
                         </>
                       )}
                     </Button>
@@ -273,6 +316,81 @@ export default function StudentDashboard() {
                 </CardContent>
               </Card>
             )}
+
+            {/* ── Photo Upload Dialog ── */}
+            <Dialog open={showPhotoDialog} onOpenChange={setShowShowPhotoDialog}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upload Certificate Photo</DialogTitle>
+                  <DialogDescription>
+                    Please upload a passport-sized photo to be attached to your official clearance certificate.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center gap-6 py-4">
+                  <div className="w-32 h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden relative group">
+                    {studentPhoto ? (
+                      <img src={studentPhoto} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-4">
+                        <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
+                        <p className="text-xs text-muted-foreground">Passport Photo</p>
+                      </div>
+                    )}
+                    <Label 
+                      htmlFor="photo-upload" 
+                      className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium"
+                    >
+                      Change Photo
+                    </Label>
+                    <Input 
+                      id="photo-upload" 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handlePhotoChange} 
+                    />
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground px-6">
+                    Note: This photo is only used for generating your PDF and is not stored permanently in our database for privacy.
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowShowPhotoDialog(false)}>Cancel</Button>
+                  <Button 
+                    className="gradient-primary" 
+                    onClick={handleGenerateCertificate}
+                    disabled={!studentPhoto}
+                  >
+                    Generate & Download
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* ── Success Dialog ── */}
+            <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+              <DialogContent className="sm:max-w-md text-center">
+                <div className="py-6 flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 bg-status-approved/20 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="w-10 h-10 text-status-approved" />
+                  </div>
+                  <div className="space-y-2">
+                    <DialogTitle className="text-2xl font-bold">Congratulations!</DialogTitle>
+                    <DialogDescription className="text-base">
+                      Your official clearance certificate has been generated successfully.
+                    </DialogDescription>
+                  </div>
+                  <p className="text-muted-foreground">
+                    You have successfully completed the graduation clearance process at Islamic University of Kenya. We wish you the best in your future endeavors!
+                  </p>
+                </div>
+                <DialogFooter className="sm:justify-center">
+                  <Button className="gradient-primary px-8" onClick={() => setShowSuccessDialog(false)}>
+                    Close
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         ) : (
           /* No Request State */

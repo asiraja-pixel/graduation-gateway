@@ -27,6 +27,7 @@ const __dirname = path.dirname(__filename);
 import userRoutes from "./routes/users.js";
 import clearanceRoutes from "./routes/clearanceRequests.js";
 import authRoutes from "./routes/auth.js";
+import settingsRoutes from "./routes/settings.js";
 import { SocketService } from './services/SocketService.js';
 
 const app = express();
@@ -68,9 +69,10 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/clearance-requests', clearanceRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('GLOBAL ERROR HANDLER:', err);
   res.status(500).json({ 
     error: 'Internal server error',

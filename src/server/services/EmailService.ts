@@ -1,40 +1,4 @@
 import nodemailer from 'nodemailer';
-import fs from 'fs';
-import path from 'path';
-
-// Manually parse .env file to handle comments and spaces
-const parseEnvFile = () => {
-  try {
-    const envPath = path.join(process.cwd(), '.env');
-    const envContent = fs.readFileSync(envPath, 'utf8');
-    
-    // Remove UTF-16 BOM if present
-    const cleanContent = envContent.replace(/^\uFEFF/, '');
-    const lines = cleanContent.split('\n');
-    
-    const env: Record<string, string> = {};
-    lines.forEach((line, index) => {
-      const trimmedLine = line.trim();
-      
-      // Skip comments and empty lines
-      if (trimmedLine.startsWith('#') || !trimmedLine) {
-        return;
-      }
-      
-      // Parse key=value pairs
-      const [key, ...valueParts] = line.split('=');
-      if (key && valueParts.length > 0) {
-        const value = valueParts.join('=').trim();
-        env[key.trim()] = value;
-      }
-    });
-    
-    return env;
-  } catch (error) {
-    console.error('Failed to parse .env file:', error);
-    return {};
-  }
-};
 
 interface EmailConfig {
   host: string;
@@ -114,8 +78,9 @@ class EmailService {
         await this.transporter.verify();
         console.log('✅ SMTP server connection verified');
         return true;
-      } catch (error: any) {
-        console.error(`❌ SMTP connection attempt ${attempt + 1} failed:`, error.message);
+      } catch (error) {
+        const err = error as Error;
+        console.error(`❌ SMTP connection attempt ${attempt + 1} failed:`, err.message);
         
         if (attempt === maxRetries) {
           // Provide specific Gmail troubleshooting on final failure
@@ -162,8 +127,9 @@ class EmailService {
       }
       
       return true;
-    } catch (error: any) {
-      console.error('❌ Failed to send email:', error.message);
+    } catch (error) {
+      const err = error as Error;
+      console.error('❌ Failed to send email:', err.message);
       
       // Don't fail the operation if email fails
       return false;

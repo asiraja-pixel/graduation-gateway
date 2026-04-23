@@ -15,6 +15,7 @@ interface ClearanceFormTemplateProps {
     endYear?: string;
   };
   request: ClearanceRequest;
+  photoUrl?: string; // Optional student photo
 }
 
 const fieldStyle: React.CSSProperties = {
@@ -36,10 +37,9 @@ const labelStyle: React.CSSProperties = {
 
 const sectionTitleStyle: React.CSSProperties = {
   fontWeight: 700,
-  fontSize: '12px',
-  textDecoration: 'underline',
-  marginBottom: '8px',
-  marginTop: '12px',
+  fontSize: '11px',
+  marginBottom: '2px',
+  marginTop: '2px',
   color: '#111',
 };
 
@@ -47,19 +47,19 @@ const rowStyle: React.CSSProperties = {
   display: 'flex',
   gap: '6px',
   alignItems: 'flex-end',
-  marginBottom: '8px',
+  marginBottom: '4px',
 };
 
 const signatureRowStyle: React.CSSProperties = {
   display: 'flex',
   gap: '12px',
-  marginBottom: '6px',
+  marginBottom: '2px',
   alignItems: 'flex-end',
 };
 
 const dividerStyle: React.CSSProperties = {
   borderTop: '1px solid #aaa',
-  margin: '10px 0 8px 0',
+  margin: '6px 0 4px 0',
 };
 
 interface DeptSectionProps {
@@ -67,6 +67,7 @@ interface DeptSectionProps {
   clearance?: {
     status: string;
     staffName?: string;
+    staffSignature?: string;
     comment?: string;
     processedAt?: string;
     timestamp?: string | Date;
@@ -80,7 +81,7 @@ const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
     : '';
 
   return (
-    <div style={{ marginBottom: '4px' }}>
+    <div style={{ marginBottom: '2px' }}>
       <div style={sectionTitleStyle}>{title}</div>
       <div style={rowStyle}>
         <span style={labelStyle}>Comment</span>
@@ -95,7 +96,21 @@ const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
       <div style={signatureRowStyle}>
         <div style={{ flex: 1.5 }}>
           <span style={labelStyle}>Signature</span>
-          <span style={{ ...fieldStyle, display: 'block', marginTop: '2px' }}></span>
+          <div style={{ ...fieldStyle, display: 'block', marginTop: '2px', position: 'relative', height: '30px' }}>
+            {clearance?.staffSignature && (
+              <img 
+                src={clearance.staffSignature} 
+                alt="Staff Signature" 
+                style={{ 
+                  height: '100%', 
+                  position: 'absolute', 
+                  bottom: '2px', 
+                  left: '0', 
+                  objectFit: 'contain' 
+                }} 
+              />
+            )}
+          </div>
         </div>
         <div style={{ flex: 1.5 }}>
           <span style={labelStyle}>Name</span>
@@ -108,17 +123,19 @@ const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
           <span style={{ ...fieldStyle, display: 'block', marginTop: '2px' }}>{date}</span>
         </div>
       </div>
-      <div style={dividerStyle} />
     </div>
   );
 };
 
 const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemplateProps>(
-  ({ user, request }, ref) => {
+  ({ user, request, photoUrl }, ref) => {
     const depts = request.departmentClearances;
     const submittedDate = request.submittedAt
       ? new Date(request.submittedAt).toLocaleDateString('en-GB')
       : '';
+
+    // Generate dynamic document reference number
+    const documentRef = `REF/IUK/${user.registrationNumber}/${new Date().getFullYear()}`;
 
     // Function to get school/department based on program
     const getSchoolFromProgram = (program?: string) => {
@@ -151,58 +168,74 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
         ref={ref}
         style={{
           width: '794px',         // A4 at 96dpi
-          minHeight: '1123px',
+          height: '1123px',       // Force A4 height
           backgroundColor: '#ffffff',
-          padding: '48px 56px',
+          padding: '16px 36px',   // Further reduced padding
           boxSizing: 'border-box',
           fontFamily: 'Arial, sans-serif',
           color: '#111',
           position: 'relative',
+          overflow: 'hidden',     // Ensure it stays on one page
         }}
       >
         {/* ── HEADER ── */}
-        <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-          <div
-            style={{
-              color: '#2e7d32',
-              fontWeight: 900,
-              fontSize: '15px',
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              marginBottom: '8px',
-            }}
-          >
-            GRADUATING STUDENT CLEARANCE REPORT
+        <div style={{ textAlign: 'center', marginBottom: '12px', position: 'relative' }}>
+          {/* Logo at the very top center */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', position: 'relative' }}>
+            <img
+              src="/iuk_logo.png"
+              alt="IUK Logo"
+              crossOrigin="anonymous"
+              style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 0 8px 0' }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            {/* Document Reference Number to the right */}
+            <div 
+              style={{ 
+                position: 'absolute', 
+                right: '0', 
+                top: '0', 
+                fontSize: '9px', 
+                color: '#444', 
+                fontWeight: 400 
+              }}
+            >
+              Doc Ref: {documentRef}
+            </div>
           </div>
 
-          {/* Logo placeholder – swap src to /iuk_logo.png in production */}
-          <img
-            src="/iuk_logo.png"
-            alt="IUK Logo"
-            crossOrigin="anonymous"
-            style={{ width: '72px', height: '72px', objectFit: 'contain', margin: '4px 0' }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-
-          <div style={{ fontWeight: 900, fontSize: '13px', marginTop: '4px' }}>
+          <div style={{ fontWeight: 900, fontSize: '12px', marginTop: '2px' }}>
             ISLAMIC UNIVERSITY OF KENYA
           </div>
-          <div style={{ fontSize: '11px', marginTop: '2px' }}>
+          <div style={{ fontSize: '10px', marginTop: '1px' }}>
             PO.BOX 884-0024, Kitengela, Kenya
           </div>
-          <div style={{ fontSize: '11px' }}>
+          <div style={{ fontSize: '10px' }}>
             Email:{' '}
             <span style={{ color: '#1565c0' }}>
               info@iuk.ac.ke / admission@iuk.ac.ke
             </span>
           </div>
-          <div style={{ fontSize: '11px' }}>
+          <div style={{ fontSize: '10px' }}>
             Phone: +254 716 333 222 / +254 707 267 957
+          </div>
+
+          <div
+            style={{
+              color: '#2e7d32',
+              fontWeight: 900,
+              fontSize: '14px',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              marginBottom: '4px',
+            }}
+          >
+            GRADUATING STUDENT CLEARANCE FORM
           </div>
         </div>
 
         {/* ── STUDENT DETAILS + PHOTO ── */}
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', gap: '20px', marginBottom: '6px' }}>
           {/* Left column */}
           <div style={{ flex: 1 }}>
             <div style={sectionTitleStyle}>STUDENT DETAILS</div>
@@ -216,7 +249,7 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
               { label: 'Phone:', value: user.phoneNumber || '' },
               { label: 'Address:', value: user.address || '' },
             ].map(({ label, value }) => (
-              <div key={label} style={{ ...rowStyle, marginBottom: '6px' }}>
+              <div key={label} style={{ ...rowStyle, marginBottom: '2px' }}>
                 <span style={{ ...labelStyle, minWidth: '90px' }}>{label}</span>
                 <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
               </div>
@@ -226,66 +259,93 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
           {/* Photo box */}
           <div
             style={{
-              width: '100px',
-              height: '120px',
-              border: '1.5px solid #2e7d32',
+              width: '90px',
+              height: '110px',
+              border: '1px solid #2e7d32',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              marginTop: '18px',
-              fontSize: '10px',
+              marginTop: '10px',
+              fontSize: '9px',
               color: '#888',
               textAlign: 'center',
+              overflow: 'hidden',
             }}
           >
-            Add your
-            <br />
-            Photo
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt="Student Photo"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <>
+                Add your
+                <br />
+                Photo
+              </>
+            )}
           </div>
         </div>
 
         {/* ── ACADEMIC INFO ── */}
-        <div style={{ marginBottom: '8px' }}>
+        <div style={{ marginBottom: '4px' }}>
           <div style={sectionTitleStyle}>STUDENT ACADEMIC INFORMATION:</div>
-          {[
-            { label: 'Name Of Department:', value: schoolName },
-            { label: 'Name Of Programme:', value: user.program || '' },
-            { label: 'Year Started:', value: user.startYear || '' },
-            { label: 'Year Ending:', value: user.endYear || '' },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ ...rowStyle, marginBottom: '6px' }}>
-              <span style={{ ...labelStyle, minWidth: '140px' }}>{label}</span>
-              <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
+          <div style={{ display: 'flex', gap: '30px' }}>
+            {/* Left Column: Years */}
+            <div style={{ flex: 1 }}>
+              {[
+                { label: 'Year Started:', value: user.startYear || '' },
+                { label: 'Year Ending:', value: user.endYear || '' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ ...rowStyle, marginBottom: '2px' }}>
+                  <span style={{ ...labelStyle, minWidth: '80px' }}>{label}</span>
+                  <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
+                </div>
+              ))}
             </div>
-          ))}
+
+            {/* Right Column: Dept/Prog */}
+            <div style={{ flex: 2 }}>
+              {[
+                { label: 'Name Of Department:', value: schoolName },
+                { label: 'Name Of Programme:', value: user.program || '' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ ...rowStyle, marginBottom: '2px' }}>
+                  <span style={{ ...labelStyle, minWidth: '130px' }}>{label}</span>
+                  <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div style={dividerStyle} />
+        {/* Removed dividerStyle line as per request */}
 
         {/* ── DEPARTMENT SECTIONS ── */}
         <DeptSection
-          title="Head of Department Report"
-          clearance={depts?.academic}
+          title="Head of Department"
+          clearance={depts?.department}
         />
         <DeptSection
-          title="Finance Report"
+          title="Finance"
           clearance={depts?.finance}
         />
         <DeptSection
-          title="Academic Report"
-          clearance={depts?.academic}
+          title="Dean of Students"
+          clearance={depts?.dean}
         />
         <DeptSection
-          title="Librarian Report"
+          title="Librarian"
           clearance={depts?.library}
         />
         <DeptSection
-          title="Accommodation Matron / Patron Report"
+          title="Accommodation/Matron"
           clearance={depts?.accommodation}
         />
         <DeptSection
-          title="Registrar Report"
+          title="Registrar"
           clearance={depts?.registrar}
         />
 

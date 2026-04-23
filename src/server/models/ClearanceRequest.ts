@@ -24,9 +24,9 @@ export interface IClearanceRequest extends Document {
     library: IDepartmentClearance;
     finance: IDepartmentClearance;
     accommodation: IDepartmentClearance;
-    it: IDepartmentClearance;
-    academic: IDepartmentClearance;
+    dean: IDepartmentClearance;
     registrar: IDepartmentClearance;
+    department: IDepartmentClearance;
   };
   submittedAt: Date;
   lastUpdated: Date;
@@ -74,9 +74,9 @@ const ClearanceRequestSchema = new Schema<IClearanceRequest>({
     library: { type: DepartmentClearanceSchema, default: {} },
     finance: { type: DepartmentClearanceSchema, default: {} },
     accommodation: { type: DepartmentClearanceSchema, default: {} },
-    it: { type: DepartmentClearanceSchema, default: {} },
-    academic: { type: DepartmentClearanceSchema, default: {} },
-    registrar: { type: DepartmentClearanceSchema, default: {} }
+    dean: { type: DepartmentClearanceSchema, default: {} },
+    registrar: { type: DepartmentClearanceSchema, default: {} },
+    department: { type: DepartmentClearanceSchema, default: {} }
   },
   submittedAt: {
     type: Date,
@@ -97,7 +97,7 @@ ClearanceRequestSchema.index({ overallStatus: 1 });
 
 // Method to update overall status based on department clearances
 ClearanceRequestSchema.methods.updateOverallStatus = function() {
-  const departments = ['library', 'finance', 'accommodation', 'it', 'academic', 'registrar'];
+  const departments = ['library', 'finance', 'accommodation', 'dean', 'registrar', 'department'];
   const statuses = departments.map(dept => (this.departmentClearances as Record<string, IDepartmentClearance>)[dept]?.status || 'pending');
   
   const allApproved = statuses.every(status => status === 'approved');

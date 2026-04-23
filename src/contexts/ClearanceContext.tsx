@@ -213,9 +213,9 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
           library: { department: 'library', status: 'pending' },
           finance: { department: 'finance', status: 'pending' },
           accommodation: { department: 'accommodation', status: 'pending' },
-          it: { department: 'it', status: 'pending' },
-          academic: { department: 'academic', status: 'pending' },
+          dean: { department: 'dean', status: 'pending' },
           registrar: { department: 'registrar', status: 'pending' },
+          department: { department: 'department', status: 'pending' },
         },
       };
       setRequests(prev => [...prev, newRequest]);

@@ -112,6 +112,21 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       setShowCreateDialog(false);
+      setNewUser({
+        name: '',
+        email: '',
+        password: '',
+        accountType: 'student',
+        department: undefined,
+        program: undefined,
+        registrationNumber: '',
+        nationality: '',
+        gender: 'male',
+        phoneNumber: '',
+        address: '',
+        startYear: '',
+        endYear: ''
+      });
     },
   });
 
@@ -144,7 +159,13 @@ export default function AdminUsers() {
     accountType: 'student',
     department: undefined,
     program: undefined,
-    registrationNumber: ''
+    registrationNumber: '',
+    nationality: '',
+    gender: 'male',
+    phoneNumber: '',
+    address: '',
+    startYear: '',
+    endYear: ''
   });
 
   const filteredUsers = users.filter(user => {
@@ -438,6 +459,69 @@ export default function AdminUsers() {
                       onChange={(e) => setNewUser({ ...newUser, program: e.target.value })}
                       placeholder="Computer Science"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nationality">Nationality</Label>
+                    <Input
+                      id="nationality"
+                      value={newUser.nationality}
+                      onChange={(e) => setNewUser({ ...newUser, nationality: e.target.value })}
+                      placeholder="e.g. Kenyan"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select
+                      value={newUser.gender}
+                      onValueChange={(value) => setNewUser({ ...newUser, gender: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      value={newUser.phoneNumber}
+                      onChange={(e) => setNewUser({ ...newUser, phoneNumber: e.target.value })}
+                      placeholder="+254..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      value={newUser.address}
+                      onChange={(e) => setNewUser({ ...newUser, address: e.target.value })}
+                      placeholder="Street, City"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="startYear">Start Year</Label>
+                      <Input
+                        id="startYear"
+                        value={newUser.startYear}
+                        onChange={(e) => setNewUser({ ...newUser, startYear: e.target.value })}
+                        placeholder="2020"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endYear">End Year</Label>
+                      <Input
+                        id="endYear"
+                        value={newUser.endYear}
+                        onChange={(e) => setNewUser({ ...newUser, endYear: e.target.value })}
+                        placeholder="2024"
+                      />
+                    </div>
                   </div>
                 </>
               )}

@@ -137,9 +137,8 @@ export default function StudentRequest() {
                     <Input
                       id="studentId"
                       value={formData.studentIdNumber}
-                      onChange={(e) => setFormData(prev => ({ ...prev, studentIdNumber: e.target.value }))}
-                      placeholder="e.g., STU2024001"
-                      required
+                      disabled
+                      className="bg-muted"
                     />
                   </div>
                   <div className="space-y-2">
@@ -147,9 +146,8 @@ export default function StudentRequest() {
                     <Input
                       id="program"
                       value={formData.program}
-                      onChange={(e) => setFormData(prev => ({ ...prev, program: e.target.value }))}
-                      placeholder="e.g., Computer Science"
-                      required
+                      disabled
+                      className="bg-muted"
                     />
                   </div>
                 </div>

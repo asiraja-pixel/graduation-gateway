@@ -6,9 +6,9 @@ export type Department =
   | 'library' 
   | 'finance' 
   | 'accommodation' 
-  | 'it' 
-  | 'academic'
-  | 'registrar';
+  | 'dean'
+  | 'registrar'
+  | 'department';
 
 export interface User {
   id: string;
@@ -27,6 +27,7 @@ export interface User {
   address?: string;
   startYear?: string;
   endYear?: string;
+  signature?: string; // For staff
 }
 
 export interface DepartmentClearance {
@@ -34,8 +35,10 @@ export interface DepartmentClearance {
   status: ClearanceStatus;
   staffId?: string;
   staffName?: string;
+  staffSignature?: string;
   comment?: string;
   processedAt?: string;
+  timestamp?: string | Date;
 }
 
 export interface ClearanceRequest {
@@ -51,9 +54,9 @@ export interface ClearanceRequest {
     library: DepartmentClearance;
     finance: DepartmentClearance;
     accommodation: DepartmentClearance;
-    it: DepartmentClearance;
-    academic: DepartmentClearance;
+    dean: DepartmentClearance;
     registrar: DepartmentClearance;
+    department: DepartmentClearance;
   };
   overallStatus: ClearanceStatus;
   submittedAt: string;
@@ -64,9 +67,9 @@ export const DEPARTMENTS: { value: Department; label: string }[] = [
   { value: 'library', label: 'Library' },
   { value: 'finance', label: 'Finance' },
   { value: 'accommodation', label: 'Accommodation' },
-  { value: 'it', label: 'IT Department' },
-  { value: 'academic', label: 'Academic Office' },
+  { value: 'dean', label: 'Dean of Students' },
   { value: 'registrar', label: 'Registrar' },
+  { value: 'department', label: 'Head of Department (HoD)' },
 ];
 
 export const getDepartmentLabel = (dept: Department): string => {

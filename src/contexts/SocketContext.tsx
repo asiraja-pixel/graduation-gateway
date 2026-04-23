@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { ClearanceRequest } from '@/types';
 
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
-  requests: any[];
-  notifications: any[];
+  requests: ClearanceRequest[];
+  notifications: unknown[];
   submitClearanceRequest: (payload?: {
     studentId?: string;
     studentName?: string;
@@ -23,13 +24,14 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [requests, setRequests] = useState<ClearanceRequest[]>([]);
+  const [notifications, setNotifications] = useState<unknown[]>([]);
   const { user, token } = useAuth();
 
   useEffect(() => {
     if (token && user) {
-      const newSocket = io((import.meta as any).env.VITE_API_URL || '', {
+      const apiUrl = (import.meta as unknown as { env: { VITE_API_URL: string } }).env.VITE_API_URL || '';
+      const newSocket = io(apiUrl, {
         auth: {
           token: token
         }
@@ -49,50 +51,55 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         console.log('Socket connected:', data);
       });
 
-      // Listen for new requests (staff)
-      newSocket.on('new_request', (request) => {
+      newSocket.on('new_request', (request: ClearanceRequest) => {
         setRequests(prev => [request, ...prev]);
-        setNotifications(prev => [{
-          id: Date.now(),
-          type: 'info',
-          message: `New clearance request from ${request.studentName}`,
-          timestamp: new Date()
-        }, ...prev]);
+        setNotifications(prev => [
+          {
+            id: Math.random().toString(),
+            type: 'new_request',
+            message: `New clearance request from ${request.studentName}`,
+            timestamp: new Date()
+          },
+          ...prev
+        ]);
       });
 
-      // Listen for status changes
-      newSocket.on('status_changed', (update) => {
-        setRequests(prev => prev.map(req => 
-          req._id === update.requestId ? update.updatedRequest : req
-        ));
-        setNotifications(prev => [{
-          id: Date.now(),
-          type: update.status === 'approved' ? 'success' : 'warning',
-          message: `Department ${update.department} ${update.status} request for ${update.updatedRequest.studentName}`,
-          timestamp: new Date()
-        }, ...prev]);
+      newSocket.on('status_changed', (data: { requestId: string; department: string; status: string; updatedRequest: ClearanceRequest; updatedBy: string }) => {
+        const { updatedRequest, updatedBy, status } = data;
+        setRequests(prev => prev.map(req => req._id === updatedRequest._id ? updatedRequest : req));
+        setNotifications(prev => [
+          {
+            id: Math.random().toString(),
+            type: 'status_update',
+            message: `${updatedBy} updated a request to ${status}`,
+            timestamp: new Date()
+          },
+          ...prev
+        ]);
       });
 
-      // Listen for user's request updates
-      newSocket.on('your_request_updated', (updatedRequest) => {
-        setRequests(prev => prev.map(req => 
-          req._id === updatedRequest._id ? updatedRequest : req
-        ));
+      newSocket.on('your_request_updated', (updatedRequest: ClearanceRequest) => {
+        setRequests(prev => prev.map(req => req._id === updatedRequest._id ? updatedRequest : req));
+      });
+
+      newSocket.on('department_request_updated', (updatedRequest: ClearanceRequest) => {
+        setRequests(prev => prev.map(req => req._id === updatedRequest._id ? updatedRequest : req));
       });
 
       // Listen for system notifications
-      newSocket.on('system_notification', (notification) => {
+      newSocket.on('system_notification', (notification: { type: string; message: string }) => {
         setNotifications(prev => [{
-          id: Date.now(),
-          ...notification
+          id: Date.now().toString(),
+          ...notification,
+          timestamp: new Date()
         }, ...prev]);
       });
 
       // Listen for errors
-      newSocket.on('error', (error) => {
+      newSocket.on('error', (error: { message: string }) => {
         console.error('Socket error:', error);
         setNotifications(prev => [{
-          id: Date.now(),
+          id: Date.now().toString(),
           type: 'error',
           message: error.message || 'An error occurred',
           timestamp: new Date()

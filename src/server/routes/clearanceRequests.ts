@@ -5,7 +5,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 const router = express.Router();
 
 // Get all clearance requests (for staff)
-router.get('/', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, async (_req: AuthRequest, res) => {
   try {
     const requests = await ClearanceRequest.find({})
       .sort({ submittedAt: -1 })
@@ -96,10 +96,6 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 // Update department status
 router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    if (req.user!.accountType !== 'staff') {
-      return res.status(403).json({ error: 'Only staff can update clearance status' });
-    }
-
     const { department, status, comment } = req.body;
 
     if (!department || !status) {
@@ -108,19 +104,26 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       });
     }
 
-    if (!['library', 'finance', 'accommodation', 'it', 'academic', 'registrar'].includes(department)) {
+    if (!['library', 'finance', 'accommodation', 'dean', 'registrar', 'department'].includes(department)) {
       return res.status(400).json({ 
         error: 'Invalid department' 
       });
     }
 
-    if (!['approved', 'rejected'].includes(status)) {
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
       return res.status(400).json({ 
         error: 'Invalid status' 
       });
     }
 
-    if (req.user!.department !== department) {
+    const isStaff = req.user!.accountType === 'staff';
+    const isAdmin = req.user!.accountType === 'admin';
+
+    if (!isStaff && !isAdmin) {
+      return res.status(403).json({ error: 'Only staff or admin can update clearance status' });
+    }
+
+    if (isStaff && req.user!.department !== department) {
       return res.status(403).json({ 
         error: 'You can only update your own department' 
       });
@@ -133,17 +136,21 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
     }
 
     // Update department status
-    const deptClearances = clearanceRequest.departmentClearances as any;
+    const deptClearances = (clearanceRequest.departmentClearances as Record<string, unknown>);
     deptClearances[department] = {
       status,
       timestamp: new Date(),
       staffId: req.user!.id,
       staffName: req.user!.name,
-      comment
+      staffSignature: req.user!.signature,
+      comment: isAdmin ? (comment || 'Overridden by admin') : comment
     };
 
     // Update overall status
-    await (clearanceRequest as any).updateOverallStatus();
+    const requestWithMethod = clearanceRequest as unknown as { updateOverallStatus: () => void };
+    if (typeof requestWithMethod.updateOverallStatus === 'function') {
+      requestWithMethod.updateOverallStatus();
+    }
     await clearanceRequest.save();
 
     res.json(clearanceRequest);

@@ -14,6 +14,7 @@ export interface IUser extends Document {
   address?: string;
   startYear?: string;
   endYear?: string;
+  signature?: string; // Base64 signature for staff
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,6 +95,10 @@ const userSchema = new Schema<IUser>({
     required: function(this: IUser) {
       return this.accountType === 'student';
     }
+  },
+  signature: {
+    type: String,
+    required: false
   }
 }, {
   timestamps: true

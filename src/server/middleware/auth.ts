@@ -16,6 +16,7 @@ export interface AuthRequest extends Request {
     address?: string;
     startYear?: string;
     endYear?: string;
+    signature?: string;
   };
 }
 
@@ -28,7 +29,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as AuthRequest['user'];
     req.user = decoded;
     next();
   } catch (error) {

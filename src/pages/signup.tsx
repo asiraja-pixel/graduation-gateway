@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building } from 'lucide-react';
+import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { CountrySelect } from '@/components/CountrySelect';
+import { DEPARTMENTS } from '@/types';
+import { cn } from '@/lib/utils';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -18,11 +21,13 @@ export default function Signup() {
   const [department, setDepartment] = useState('');
   const [program, setProgram] = useState('');
   const [nationality, setNationality] = useState('');
+  const [countryCallingCode, setCountryCallingCode] = useState('');
   const [gender, setGender] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [startYear, setStartYear] = useState('');
   const [endYear, setEndYear] = useState('');
+  const [signature, setSignature] = useState<string | undefined>(undefined);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -73,14 +78,23 @@ export default function Signup() {
     }
   }, [isAuthenticated, user, navigate]);
 
-  const departments = [
-    { value: 'library', label: 'Library' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'accommodation', label: 'Accommodation/Hostels' },
-    { value: 'it', label: 'IT' },
-    { value: 'academic', label: 'Academic Office' },
-    { value: 'registrar', label: 'Registrar' }
-  ];
+  const departments = DEPARTMENTS;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        setError('Signature file is too large. Please use a smaller image (max 1MB).');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSignature(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -135,7 +149,12 @@ export default function Signup() {
           endYear
         );
       } else {
-        result = await signup(name, email, registrationNumber, password, accountType, undefined, department);
+        if (!department || !signature) {
+          setError('Please provide your department and signature');
+          setIsLoading(false);
+          return;
+        }
+        result = await signup(name, email, registrationNumber, password, accountType, undefined, department, undefined, undefined, undefined, undefined, undefined, undefined, signature);
       }
       
       if (result.success) {
@@ -371,13 +390,13 @@ export default function Signup() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="nationality">Nationality</Label>
-                        <Input
-                          id="nationality"
-                          placeholder="e.g. Kenyan"
+                        <Label>Country / Nationality</Label>
+                        <CountrySelect
                           value={nationality}
-                          onChange={(e) => setNationality(e.target.value)}
-                          required
+                          onValueChange={(_country, nat, callingCode) => {
+                            setNationality(nat);
+                            setCountryCallingCode(callingCode);
+                          }}
                         />
                       </div>
                       <div className="space-y-2">
@@ -397,13 +416,22 @@ export default function Signup() {
 
                     <div className="space-y-2">
                       <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <Input
-                        id="phoneNumber"
-                        placeholder="e.g. +254 700 000000"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        {countryCallingCode && (
+                          <span className="absolute left-10 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            {countryCallingCode}
+                          </span>
+                        )}
+                        <Input
+                          id="phoneNumber"
+                          placeholder={countryCallingCode ? "700 000000" : "+254 700 000000"}
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className={cn("pl-10", countryCallingCode && "pl-20")}
+                          required
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -446,24 +474,48 @@ export default function Signup() {
 
                 {/* Department Field - Only for Staff */}
                 {accountType === 'staff' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Select value={department} onValueChange={setDepartment}>
-                        <SelectTrigger className="pl-10">
-                          <SelectValue placeholder="Select your department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept.value} value={dept.value}>
-                              {dept.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="department">Department</Label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Select value={department} onValueChange={setDepartment}>
+                          <SelectTrigger className="pl-10">
+                            <SelectValue placeholder="Select your department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {departments.map((dept) => (
+                              <SelectItem key={dept.value} value={dept.value}>
+                                {dept.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signature">Signature (Image)</Label>
+                      <div className="relative">
+                        <Input
+                          id="signature"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="cursor-pointer"
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Upload a clear image of your signature (PNG or JPG).
+                        </p>
+                        {signature && (
+                          <div className="mt-2 p-2 border rounded-md bg-muted/30">
+                            <img src={signature} alt="Signature Preview" className="h-12 object-contain mx-auto" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {/* Password Field */}

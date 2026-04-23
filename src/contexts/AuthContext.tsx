@@ -22,7 +22,8 @@ interface AuthContextType {
     phoneNumber?: string,
     address?: string,
     startYear?: string,
-    endYear?: string
+    endYear?: string,
+    signature?: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
@@ -93,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           address: userData.address,
           startYear: userData.startYear,
           endYear: userData.endYear,
+          signature: userData.signature,
         };
 
         // Extract token from response if available
@@ -127,7 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phoneNumber?: string,
     address?: string,
     startYear?: string,
-    endYear?: string
+    endYear?: string,
+    signature?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
@@ -148,7 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phoneNumber,
           address,
           startYear,
-          endYear
+          endYear,
+          signature
         }),
       });
 
@@ -172,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           address: userData.address,
           startYear: userData.startYear,
           endYear: userData.endYear,
+          signature: userData.signature,
         };
 
         setUser(user);

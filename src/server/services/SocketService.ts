@@ -1,12 +1,12 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User.js';
+import { User, IUser } from '../models/User.js';
 import { ClearanceRequest } from '../models/ClearanceRequest.js';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
-  user?: any;
+  user?: IUser;
 }
 
 export class SocketService {
@@ -39,7 +39,7 @@ export class SocketService {
           return next(new Error('Authentication error'));
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { id: string };
         const user = await User.findById(decoded.id).select('-password');
         
         if (!user) {
@@ -80,20 +80,21 @@ export class SocketService {
       });
 
       // Handle new clearance request submission
-      socket.on('clearance_request', async (requestData: any) => {
+      socket.on('clearance_request', async (requestData: Record<string, unknown>) => {
         try {
+          if (!socket.user) return;
           const clearanceRequest = new ClearanceRequest({
             ...requestData,
             studentId: socket.userId,
-            studentName: socket.user.name,
-            registrationNumber: socket.user.registrationNumber,
-            program: socket.user.program
+            studentName: socket.user!.name,
+            registrationNumber: socket.user!.registrationNumber,
+            program: socket.user!.program
           });
 
           await clearanceRequest.save();
 
           // Emit to all department rooms
-          const departments = ['library', 'finance', 'accommodation', 'it', 'academic', 'registrar'];
+          const departments = ['library', 'finance', 'accommodation', 'dean', 'registrar', 'department'];
           departments.forEach(dept => {
             this.io.to(`department_${dept}`).emit('new_request', {
               ...clearanceRequest.toObject(),
@@ -141,17 +142,20 @@ export class SocketService {
           }
 
           // Update department status
-          const deptClearances = clearanceRequest.departmentClearances as any;
+          const deptClearances = clearanceRequest.departmentClearances as Record<string, unknown>;
           deptClearances[department] = {
             status,
             timestamp: new Date(),
             staffId: socket.userId,
-            staffName: socket.user.name,
+            staffName: socket.user!.name,
             comment
           };
 
           // Update overall status
-          await (clearanceRequest as any).updateOverallStatus();
+          const requestWithMethod = clearanceRequest as unknown as { updateOverallStatus: () => void };
+          if (typeof requestWithMethod.updateOverallStatus === 'function') {
+            requestWithMethod.updateOverallStatus();
+          }
           await clearanceRequest.save();
 
           const updatedRequest = clearanceRequest.toObject();
@@ -162,7 +166,7 @@ export class SocketService {
             department,
             status,
             updatedRequest,
-            updatedBy: socket.user.name,
+            updatedBy: socket.user!.name,
             timestamp: new Date()
           });
 
