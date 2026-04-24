@@ -67,6 +67,7 @@ export default function StaffPending() {
       actionType === 'approve' ? 'approved' : 'rejected',
       user.id,
       user.name,
+      user.signature,
       comment || undefined
     );
     

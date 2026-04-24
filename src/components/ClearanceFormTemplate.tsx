@@ -36,18 +36,19 @@ const labelStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontWeight: 700,
-  fontSize: '11px',
+  fontWeight: 900,
+  fontSize: '12px',
   marginBottom: '2px',
-  marginTop: '2px',
+  marginTop: '4px',
   color: '#111',
+  textTransform: 'uppercase',
 };
 
 const rowStyle: React.CSSProperties = {
   display: 'flex',
   gap: '6px',
   alignItems: 'flex-end',
-  marginBottom: '4px',
+  marginBottom: '2px',
 };
 
 const signatureRowStyle: React.CSSProperties = {
@@ -101,6 +102,7 @@ const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
               <img 
                 src={clearance.staffSignature} 
                 alt="Staff Signature" 
+                crossOrigin="anonymous"
                 style={{ 
                   height: '100%', 
                   position: 'absolute', 
@@ -168,18 +170,17 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
         ref={ref}
         style={{
           width: '794px',         // A4 at 96dpi
-          height: '1123px',       // Force A4 height
+          minHeight: '1123px',    // Minimum A4 height
           backgroundColor: '#ffffff',
           padding: '16px 36px',   // Further reduced padding
           boxSizing: 'border-box',
           fontFamily: 'Arial, sans-serif',
           color: '#111',
           position: 'relative',
-          overflow: 'hidden',     // Ensure it stays on one page
         }}
       >
         {/* ── HEADER ── */}
-        <div style={{ textAlign: 'center', marginBottom: '12px', position: 'relative' }}>
+        <div style={{ textAlign: 'center', marginBottom: '8px', position: 'relative' }}>
           {/* Logo at the very top center */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', position: 'relative' }}>
             <img
@@ -236,24 +237,39 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
 
         {/* ── STUDENT DETAILS + PHOTO ── */}
         <div style={{ display: 'flex', gap: '20px', marginBottom: '6px' }}>
-          {/* Left column */}
+          {/* Main Content Area */}
           <div style={{ flex: 1 }}>
             <div style={sectionTitleStyle}>STUDENT DETAILS</div>
-
-            {[
-              { label: 'Full Name:', value: user.name },
-              { label: 'Adm NO:', value: user.registrationNumber },
-              { label: 'Nationality:', value: user.nationality || '' },
-              { label: 'Gender:', value: user.gender || '' },
-              { label: 'Email:', value: user.email },
-              { label: 'Phone:', value: user.phoneNumber || '' },
-              { label: 'Address:', value: user.address || '' },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ ...rowStyle, marginBottom: '2px' }}>
-                <span style={{ ...labelStyle, minWidth: '90px' }}>{label}</span>
-                <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
+            <div style={{ display: 'flex', gap: '30px' }}>
+              {/* Left column */}
+              <div style={{ flex: 1 }}>
+                {[
+                  { label: 'Full Name:', value: user.name },
+                  { label: 'Adm NO:', value: user.registrationNumber },
+                  { label: 'Nationality:', value: user.nationality || '' },
+                  { label: 'Gender:', value: user.gender || '' },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ ...rowStyle, marginBottom: '2px' }}>
+                    <span style={{ ...labelStyle, minWidth: '80px' }}>{label}</span>
+                    <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+
+              {/* Right column */}
+              <div style={{ flex: 1.2 }}>
+                {[
+                  { label: 'Email:', value: user.email },
+                  { label: 'Phone:', value: user.phoneNumber || '' },
+                  { label: 'Address:', value: user.address || '' },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ ...rowStyle, marginBottom: '2px' }}>
+                    <span style={{ ...labelStyle, minWidth: '60px' }}>{label}</span>
+                    <span style={{ ...fieldStyle, flex: 1 }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Photo box */}
@@ -277,6 +293,7 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
               <img
                 src={photoUrl}
                 alt="Student Photo"
+                crossOrigin="anonymous"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (
@@ -352,7 +369,7 @@ const ClearanceFormTemplate = React.forwardRef<HTMLDivElement, ClearanceFormTemp
         {/* ── FOOTER ── */}
         <div
           style={{
-            marginTop: '16px',
+            marginTop: '10px',
             textAlign: 'center',
             fontSize: '9px',
             color: '#888',

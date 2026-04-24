@@ -67,15 +67,21 @@ export async function generateClearancePDF(
     );
   });
 
-  // Give the browser a couple of frames to finish layout & load the logo image
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-  await new Promise((r) => setTimeout(r, 300));
+  // Wait for all images to load
+  const images = formNode.querySelectorAll('img');
+  const imagePromises = Array.from(images).map((img) => {
+    if (img.complete) return Promise.resolve();
+    return new Promise((resolve) => {
+      img.onload = resolve;
+      img.onerror = resolve; // Continue even if an image fails
+    });
+  });
 
-  if (!formNode) {
-    root.unmount();
-    document.body.removeChild(container);
-    throw new Error('ClearanceFormTemplate did not mount correctly.');
-  }
+  await Promise.all(imagePromises);
+
+  // Give the browser a couple of frames to finish layout
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await new Promise((r) => setTimeout(r, 500)); // Slightly longer delay for stability
 
   // ── 2. Capture with html2canvas ──────────────────────────────────────────
   onProgress?.('Rendering form…');
@@ -113,33 +119,17 @@ export async function generateClearancePDF(
   const canvasWidthMm = A4_W;
   const canvasHeightMm = (canvas.height / canvas.width) * A4_W;
 
-  // If the content is taller than one page, split across pages
+  // Always force onto a single page as per user request ("maximum of 1 page")
   if (canvasHeightMm <= A4_H) {
+    // Fits naturally or shorter than A4
     pdf.addImage(imgData, 'PNG', 0, 0, canvasWidthMm, canvasHeightMm);
   } else {
-    // Multi-page: slice the canvas vertically
-    const pageHeightPx = Math.floor((A4_H / canvasWidthMm) * canvas.width);
-    let offsetPx = 0;
-    let pageIndex = 0;
-
-    while (offsetPx < canvas.height) {
-      const sliceH = Math.min(pageHeightPx, canvas.height - offsetPx);
-
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = sliceH;
-      const ctx = pageCanvas.getContext('2d')!;
-      ctx.drawImage(canvas, 0, -offsetPx);
-
-      const pageImg = pageCanvas.toDataURL('image/png');
-      const sliceHeightMm = (sliceH / canvas.width) * canvasWidthMm;
-
-      if (pageIndex > 0) pdf.addPage();
-      pdf.addImage(pageImg, 'PNG', 0, 0, canvasWidthMm, sliceHeightMm);
-
-      offsetPx += sliceH;
-      pageIndex++;
-    }
+    // Content is taller than A4, so we scale it down to fit exactly one page height
+    const scaleFactor = A4_H / canvasHeightMm;
+    const scaledWidthMm = canvasWidthMm * scaleFactor;
+    const xOffset = (A4_W - scaledWidthMm) / 2; // Center horizontally
+    
+    pdf.addImage(imgData, 'PNG', xOffset, 0, scaledWidthMm, A4_H);
   }
 
   // ── 4. Add metadata ──────────────────────────────────────────────────────

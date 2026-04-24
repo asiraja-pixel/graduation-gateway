@@ -5,6 +5,7 @@ export interface IDepartmentClearance {
   timestamp?: Date;
   staffId?: string;
   staffName?: string;
+  staffSignature?: string;
   comment?: string;
 }
 
@@ -41,6 +42,7 @@ const DepartmentClearanceSchema = new Schema<IDepartmentClearance>({
   timestamp: Date,
   staffId: String,
   staffName: String,
+  staffSignature: String,
   comment: String
 });
 

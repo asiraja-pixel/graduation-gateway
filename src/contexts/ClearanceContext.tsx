@@ -15,7 +15,7 @@ interface ClearanceContextType {
   getStudentRequest: (studentId: string) => ClearanceRequest | undefined;
   getDepartmentRequests: (department: Department) => ClearanceRequest[];
   submitRequest: (request: Omit<ClearanceRequest, 'id' | 'submittedAt' | 'overallStatus' | 'departmentClearances'>) => void;
-  processRequest: (requestId: string, department: Department, status: ClearanceStatus, staffId: string, staffName: string, comment?: string) => void;
+  processRequest: (requestId: string, department: Department, status: ClearanceStatus, staffId: string, staffName: string, staffSignature?: string, comment?: string) => void;
   overrideStatus: (requestId: string, department: Department, status: ClearanceStatus) => void;
 }
 
@@ -228,6 +228,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     status: ClearanceStatus, 
     staffId: string, 
     staffName: string, 
+    staffSignature?: string,
     comment?: string
   ) => {
     // Send update to backend first
@@ -276,6 +277,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
           status,
           staffId,
           staffName,
+          staffSignature,
           comment,
           processedAt: new Date().toISOString(),
         }

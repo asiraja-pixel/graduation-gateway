@@ -122,7 +122,7 @@ export class SocketService {
       // Handle department status updates
       socket.on('status_update', async (updateData: {
         requestId: string;
-        department: 'library' | 'finance' | 'accommodation' | 'it' | 'academic' | 'registrar';
+        department: 'library' | 'finance' | 'accommodation' | 'dean' | 'registrar' | 'department';
         status: 'approved' | 'rejected';
         comment?: string;
       }) => {
@@ -148,6 +148,7 @@ export class SocketService {
             timestamp: new Date(),
             staffId: socket.userId,
             staffName: socket.user!.name,
+            staffSignature: socket.user!.signature,
             comment
           };
 
