@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { 
   ArrowLeft, 
   Search,
@@ -98,6 +100,7 @@ const updateUser = async (token: string, userId: string, userData: UserFormState
 };
 
 export default function AdminUsers() {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
@@ -208,7 +211,7 @@ export default function AdminUsers() {
   };
 
   const handleDeleteUser = (userId: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    if (window.confirm(t('dashboard.delete_confirm'))) {
       deleteUserMutation.mutate(userId);
     }
   };
@@ -231,10 +234,10 @@ export default function AdminUsers() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Manage Users">
+      <DashboardLayout title={t('dashboard.manage_users')}>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="ml-2 text-muted-foreground">Loading users...</p>
+          <p className="ml-2 text-muted-foreground">{t('dashboard.loading_users')}</p>
         </div>
       </DashboardLayout>
     );
@@ -242,13 +245,13 @@ export default function AdminUsers() {
 
   if (error) {
     return (
-      <DashboardLayout title="Manage Users">
+      <DashboardLayout title={t('dashboard.manage_users')}>
         <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
           <AlertTriangle className="w-10 h-10 text-destructive mb-4" />
-          <h3 className="text-xl font-semibold text-destructive">Failed to Load Users</h3>
+          <h3 className="text-xl font-semibold text-destructive">{t('dashboard.failed_load_users')}</h3>
           <p className="text-muted-foreground mt-2">{error.message}</p>
           <Button variant="destructive" className="mt-4" onClick={() => refetch()}>
-            Retry
+            {t('common.retry')}
           </Button>
         </div>
       </DashboardLayout>
@@ -256,23 +259,23 @@ export default function AdminUsers() {
   }
 
   return (
-    <DashboardLayout title="Manage Users">
+    <DashboardLayout title={t('dashboard.manage_users')}>
       <div className="space-y-6 animate-fade-in">
         <Link to="/admin" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Dashboard
+          {t('common.back_to_dashboard')}
         </Link>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Manage Users</h2>
+            <h2 className="text-2xl font-bold">{t('dashboard.manage_users')}</h2>
             <p className="text-muted-foreground">
-              {filteredUsers.length} of {users.length} users
+              {t('dashboard.users_count', { count: filteredUsers.length, total: users.length })}
             </p>
           </div>
           <Button className="gradient-primary" onClick={() => setShowCreateDialog(true)}>
             <UserPlus className="w-4 h-4 mr-2" />
-            Add User
+            {t('dashboard.add_user')}
           </Button>
         </div>
 
@@ -283,7 +286,7 @@ export default function AdminUsers() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name or email..."
+                  placeholder={t('dashboard.search_users')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -291,13 +294,13 @@ export default function AdminUsers() {
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by role" />
+                  <SelectValue placeholder={t('dashboard.filter_by_role')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="student">Students</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
+                  <SelectItem value="all">{t('dashboard.all_roles')}</SelectItem>
+                  <SelectItem value="student">{t('dashboard.students')}</SelectItem>
+                  <SelectItem value="staff">{t('dashboard.staff')}</SelectItem>
+                  <SelectItem value="admin">{t('dashboard.admins')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -322,7 +325,7 @@ export default function AdminUsers() {
                       </div>
                     </div>
                     <Badge className={getRoleBadgeClass(user.accountType)}>
-                      {user.accountType}
+                      {t(`auth.${user.accountType}`)}
                     </Badge>
                   </div>
 
@@ -330,19 +333,19 @@ export default function AdminUsers() {
                     {user.accountType === 'student' && (
                       <>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Registration No.</span>
+                          <span className="text-muted-foreground">{t('auth.registration_number')}</span>
                           <span>{user.registrationNumber}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Program</span>
-                          <span>{user.program}</span>
+                          <span className="text-muted-foreground">{t('auth.program')}</span>
+                          <span>{user.program && t(`programs.${user.program}`)}</span>
                         </div>
                       </>
                     )}
                     {user.accountType === 'staff' && user.department && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Department</span>
-                        <span>{getDepartmentLabel(user.department as Department)}</span>
+                        <span className="text-muted-foreground">{t('auth.department')}</span>
+                        <span>{t(`departments.${user.department}`)}</span>
                       </div>
                     )}
                   </div>
@@ -355,7 +358,7 @@ export default function AdminUsers() {
                       onClick={() => handleEditUser(user)}
                     >
                       <Edit className="w-3 h-3 mr-1" />
-                      Edit
+                      {t('common.edit')}
                     </Button>
                     <Button 
                       variant="destructive" 
@@ -365,7 +368,7 @@ export default function AdminUsers() {
                       disabled={deleteUserMutation.isPending}
                     >
                       <Trash2 className="w-3 h-3 mr-1" />
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   </div>
                 </CardContent>
@@ -378,7 +381,7 @@ export default function AdminUsers() {
           <Card className="card-elevated">
             <CardContent className="py-12">
               <div className="text-center">
-                <p className="text-muted-foreground">No users match your search criteria.</p>
+                <p className="text-muted-foreground">{t('dashboard.no_requests_found')}</p>
               </div>
             </CardContent>
           </Card>
@@ -388,14 +391,14 @@ export default function AdminUsers() {
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
+              <DialogTitle>{t('dashboard.add_user')}</DialogTitle>
               <DialogDescription>
-                Create a new user account. They will receive an email with their login credentials.
+                {t('dashboard.create_new_user_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t('auth.full_name')}</Label>
                 <Input
                   id="name"
                   value={newUser.name}
@@ -404,7 +407,7 @@ export default function AdminUsers() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -414,7 +417,7 @@ export default function AdminUsers() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -424,7 +427,7 @@ export default function AdminUsers() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">{t('auth.account_type')}</Label>
                 <Select
                   value={newUser.accountType}
                   onValueChange={(value: UserRole) => setNewUser({ ...newUser, accountType: value })}
@@ -433,9 +436,9 @@ export default function AdminUsers() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="student">{t('auth.student')}</SelectItem>
+                    <SelectItem value="staff">{t('auth.staff')}</SelectItem>
+                    <SelectItem value="admin">{t('auth.admin')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -443,7 +446,7 @@ export default function AdminUsers() {
               {newUser.accountType === 'student' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="studentId">Registration Number</Label>
+                    <Label htmlFor="studentId">{t('auth.registration_number')}</Label>
                     <Input
                       id="studentId"
                       value={newUser.registrationNumber}
@@ -452,16 +455,23 @@ export default function AdminUsers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="program">Program</Label>
-                    <Input
-                      id="program"
-                      value={newUser.program}
-                      onChange={(e) => setNewUser({ ...newUser, program: e.target.value })}
-                      placeholder="Computer Science"
-                    />
+                    <Label htmlFor="program">{t('auth.program')}</Label>
+                    <Select 
+                      value={newUser.program} 
+                      onValueChange={(val) => setNewUser({...newUser, program: val})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('auth.select_program')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(t('programs', { returnObjects: true })).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>{value as string}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="nationality">Nationality</Label>
+                    <Label htmlFor="nationality">{t('auth.nationality')}</Label>
                     <Input
                       id="nationality"
                       value={newUser.nationality}
@@ -470,23 +480,23 @@ export default function AdminUsers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
+                    <Label htmlFor="gender">{t('auth.gender')}</Label>
                     <Select
                       value={newUser.gender}
                       onValueChange={(value) => setNewUser({ ...newUser, gender: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue placeholder={t('auth.select_gender')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="male">{t('auth.male')}</SelectItem>
+                        <SelectItem value="female">{t('auth.female')}</SelectItem>
+                        <SelectItem value="other">{t('auth.other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">{t('auth.phone_number')}</Label>
                     <Input
                       id="phone"
                       value={newUser.phoneNumber}
@@ -495,7 +505,7 @@ export default function AdminUsers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">{t('auth.address')}</Label>
                     <Input
                       id="address"
                       value={newUser.address}
@@ -505,7 +515,7 @@ export default function AdminUsers() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="startYear">Start Year</Label>
+                      <Label htmlFor="startYear">{t('auth.start_year')}</Label>
                       <Input
                         id="startYear"
                         value={newUser.startYear}
@@ -514,7 +524,7 @@ export default function AdminUsers() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="endYear">End Year</Label>
+                      <Label htmlFor="endYear">{t('auth.end_year')}</Label>
                       <Input
                         id="endYear"
                         value={newUser.endYear}
@@ -528,18 +538,18 @@ export default function AdminUsers() {
 
               {newUser.accountType === 'staff' && (
                 <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
+                  <Label htmlFor="department">{t('auth.department')}</Label>
                   <Select
                     value={newUser.department}
                     onValueChange={(value: Department) => setNewUser({ ...newUser, department: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue placeholder={t('auth.select_department_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {DEPARTMENTS.map((dept) => (
                         <SelectItem key={dept.value} value={dept.value}>
-                          {dept.label}
+                          {t(`departments.${dept.value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -549,7 +559,7 @@ export default function AdminUsers() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button 
                 className="gradient-primary" 
@@ -559,10 +569,10 @@ export default function AdminUsers() {
                 {createUserMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
+                    {t('common.loading')}
                   </>
                 ) : (
-                  'Create User'
+                  t('dashboard.add_user')
                 )}
               </Button>
             </DialogFooter>
@@ -573,14 +583,14 @@ export default function AdminUsers() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
+              <DialogTitle>{t('dashboard.edit_user')}</DialogTitle>
               <DialogDescription>
-                Update user information. Leave password blank to keep current password.
+                {t('dashboard.edit_user_desc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
               <div className="space-y-2">
-                <Label htmlFor="edit-name">Full Name</Label>
+                <Label htmlFor="edit-name">{t('auth.full_name')}</Label>
                 <Input
                   id="edit-name"
                   value={editForm.name || ''}
@@ -588,7 +598,7 @@ export default function AdminUsers() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-email">Email Address</Label>
+                <Label htmlFor="edit-email">{t('auth.email')}</Label>
                 <Input
                   id="edit-email"
                   type="email"
@@ -597,17 +607,17 @@ export default function AdminUsers() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-password">New Password (optional)</Label>
+                <Label htmlFor="edit-password">{t('auth.new_password_optional')}</Label>
                 <Input
                   id="edit-password"
                   type="password"
                   value={editForm.password || ''}
                   onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                  placeholder="Leave blank to keep current"
+                  placeholder={t('auth.leave_blank_keep_current')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
+                <Label htmlFor="edit-role">{t('auth.account_type')}</Label>
                 <Select
                   value={editForm.accountType}
                   onValueChange={(value: UserRole) => setEditForm({ ...editForm, accountType: value })}
@@ -616,9 +626,9 @@ export default function AdminUsers() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="student">{t('auth.student')}</SelectItem>
+                    <SelectItem value="staff">{t('auth.staff')}</SelectItem>
+                    <SelectItem value="admin">{t('auth.admin')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -626,7 +636,7 @@ export default function AdminUsers() {
               {editForm.accountType === 'student' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-studentId">Registration Number</Label>
+                    <Label htmlFor="edit-studentId">{t('auth.registration_number')}</Label>
                     <Input
                       id="edit-studentId"
                       value={editForm.registrationNumber || ''}
@@ -634,15 +644,23 @@ export default function AdminUsers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-program">Program</Label>
-                    <Input
-                      id="edit-program"
-                      value={editForm.program || ''}
-                      onChange={(e) => setEditForm({ ...editForm, program: e.target.value })}
-                    />
+                    <Label htmlFor="edit-program">{t('auth.program')}</Label>
+                    <Select 
+                      value={editForm.program} 
+                      onValueChange={(val) => setEditForm({...editForm, program: val})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('auth.select_program')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(t('programs', { returnObjects: true })).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>{value as string}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-nationality">Nationality</Label>
+                    <Label htmlFor="edit-nationality">{t('auth.nationality')}</Label>
                     <Input
                       id="edit-nationality"
                       value={editForm.nationality || ''}
@@ -650,23 +668,23 @@ export default function AdminUsers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-gender">Gender</Label>
+                    <Label htmlFor="edit-gender">{t('auth.gender')}</Label>
                     <Select
                       value={editForm.gender}
                       onValueChange={(value) => setEditForm({ ...editForm, gender: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue placeholder={t('auth.select_gender')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="male">{t('auth.male')}</SelectItem>
+                        <SelectItem value="female">{t('auth.female')}</SelectItem>
+                        <SelectItem value="other">{t('auth.other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-phone">Phone Number</Label>
+                    <Label htmlFor="edit-phone">{t('auth.phone_number')}</Label>
                     <Input
                       id="edit-phone"
                       value={editForm.phoneNumber || ''}
@@ -674,7 +692,7 @@ export default function AdminUsers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-address">Address</Label>
+                    <Label htmlFor="edit-address">{t('auth.address')}</Label>
                     <Input
                       id="edit-address"
                       value={editForm.address || ''}
@@ -683,7 +701,7 @@ export default function AdminUsers() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-startYear">Start Year</Label>
+                      <Label htmlFor="edit-startYear">{t('auth.start_year')}</Label>
                       <Input
                         id="edit-startYear"
                         value={editForm.startYear || ''}
@@ -691,7 +709,7 @@ export default function AdminUsers() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-endYear">End Year</Label>
+                      <Label htmlFor="edit-endYear">{t('auth.end_year')}</Label>
                       <Input
                         id="edit-endYear"
                         value={editForm.endYear || ''}
@@ -704,18 +722,18 @@ export default function AdminUsers() {
 
               {editForm.accountType === 'staff' && (
                 <div className="space-y-2">
-                  <Label htmlFor="edit-department">Department</Label>
+                  <Label htmlFor="edit-department">{t('auth.department')}</Label>
                   <Select
                     value={editForm.department}
                     onValueChange={(value: Department) => setEditForm({ ...editForm, department: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue placeholder={t('auth.select_department_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {DEPARTMENTS.map((dept) => (
                         <SelectItem key={dept.value} value={dept.value}>
-                          {dept.label}
+                          {t(`departments.${dept.value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -725,7 +743,7 @@ export default function AdminUsers() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button 
                 className="gradient-primary" 
@@ -735,10 +753,10 @@ export default function AdminUsers() {
                 {editUserMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    {t('common.loading')}
                   </>
                 ) : (
-                  'Save Changes'
+                  t('common.save')
                 )}
               </Button>
             </DialogFooter>

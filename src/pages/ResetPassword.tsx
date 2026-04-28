@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [token, setToken] = useState('');
@@ -36,12 +39,12 @@ export default function ResetPassword() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.passwords_not_match'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t('auth.password_too_short'));
       return;
     }
 
@@ -61,10 +64,10 @@ export default function ResetPassword() {
       if (response.ok) {
         setIsSuccess(true);
       } else {
-        setError(data.error || 'Failed to reset password');
+        setError(data.error || t('auth.failed_reset_password'));
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError(t('auth.network_error'));
     } finally {
       setIsLoading(false);
     }
@@ -73,11 +76,12 @@ export default function ResetPassword() {
   if (isTokenValid === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <LanguageSelector className="absolute top-4 right-4 z-50" />
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Validating reset token...</p>
+              <p className="text-muted-foreground">{t('auth.validating_token')}</p>
             </div>
           </CardContent>
         </Card>
@@ -88,14 +92,15 @@ export default function ResetPassword() {
   if (isTokenValid === false) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
+        <LanguageSelector className="absolute top-4 right-4 z-50" />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <CardTitle className="text-2xl font-bold text-red-600">Invalid Reset Link</CardTitle>
+            <CardTitle className="text-2xl font-bold text-red-600">{t('auth.invalid_token_title')}</CardTitle>
             <CardDescription>
-              This password reset link is invalid or has expired.
+              {t('auth.invalid_token_desc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -104,13 +109,13 @@ export default function ResetPassword() {
               className="w-full"
               variant="outline"
             >
-              Request New Reset Link
+              {t('auth.request_new_link')}
             </Button>
             <Button 
               onClick={() => navigate('/login')} 
               className="w-full"
             >
-              Back to Login
+              {t('auth.back_to_login')}
             </Button>
           </CardContent>
         </Card>
@@ -121,28 +126,29 @@ export default function ResetPassword() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
+        <LanguageSelector className="absolute top-4 right-4 z-50" />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold text-green-600">Password Reset Successful</CardTitle>
+            <CardTitle className="text-2xl font-bold text-green-600">{t('auth.reset_success_title')}</CardTitle>
             <CardDescription>
-              Your password has been successfully reset.
+              {t('auth.reset_success_desc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                You can now use your new password to log in to your account.
+                {t('auth.reset_success_alert')}
               </AlertDescription>
             </Alert>
             <Button 
               onClick={() => navigate('/login')} 
               className="w-full"
             >
-              Go to Login
+              {t('auth.go_to_login')}
             </Button>
           </CardContent>
         </Card>
@@ -152,26 +158,27 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <LanguageSelector className="absolute top-4 right-4 z-50" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <Lock className="w-8 h-8 text-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.reset_password_title')}</CardTitle>
           <CardDescription>
-            Enter your new password below.
+            {t('auth.reset_password_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">{t('auth.new_password')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter new password"
+                  placeholder={t('auth.password_placeholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10"
@@ -195,13 +202,13 @@ export default function ResetPassword() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t('auth.confirm_password')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder={t('auth.confirm_password')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10"
@@ -218,12 +225,12 @@ export default function ResetPassword() {
             )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Resetting...' : 'Reset Password'}
+              {isLoading ? t('auth.resetting') : t('auth.reset_password_title')}
             </Button>
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Remember your password?{' '}
+                {t('auth.remember_password')}{' '}
                 <a 
                   href="/login" 
                   className="text-primary hover:underline font-medium"
@@ -232,7 +239,7 @@ export default function ResetPassword() {
                     navigate('/login');
                   }}
                 >
-                  Sign in
+                  {t('auth.sign_in')}
                 </a>
               </p>
             </div>

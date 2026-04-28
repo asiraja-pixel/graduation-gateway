@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { getDepartmentLabel, ClearanceRequest, ClearanceStatus, Department } from '@/types';
 import { Link } from 'react-router-dom';
+import { normalizeClearances } from '@/utils/clearanceUtils';
 import {
   Select,
   SelectContent,
@@ -49,13 +51,7 @@ const fetchRequests = async (token: string): Promise<ClearanceRequest[]> => {
     ...d,
     id: d.id || d._id || '',
     studentId: d.studentId || d.registrationNumber || '',
-    // Ensure departmentClearances is always an object
-    departmentClearances: Array.isArray(d.departmentClearances) 
-      ? (d.departmentClearances as { department: string }[]).reduce((acc: Record<string, unknown>, dc: { department: string }) => {
-          if (dc.department) acc[dc.department.toLowerCase()] = dc;
-          return acc;
-        }, {})
-      : d.departmentClearances
+    departmentClearances: normalizeClearances(d.departmentClearances)
   })) as ClearanceRequest[];
 };
 
@@ -73,6 +69,7 @@ const overrideRequestStatus = async (token: string, requestId: string, departmen
 };
 
 export default function AdminRequests() {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const { data: requests = [], isLoading, error, refetch } = useQuery<ClearanceRequest[], Error>({
     queryKey: ['admin-requests'],
@@ -119,10 +116,10 @@ export default function AdminRequests() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="All Requests">
+      <DashboardLayout title={t('dashboard.all_requests')}>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="ml-2 text-muted-foreground">Loading requests...</p>
+          <p className="ml-2 text-muted-foreground">{t('dashboard.loading_data')}</p>
         </div>
       </DashboardLayout>
     );
@@ -130,13 +127,13 @@ export default function AdminRequests() {
 
   if (error) {
     return (
-      <DashboardLayout title="All Requests">
+      <DashboardLayout title={t('dashboard.all_requests')}>
         <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
           <AlertTriangle className="w-10 h-10 text-destructive mb-4" />
-          <h3 className="text-xl font-semibold text-destructive">Failed to Load Requests</h3>
+          <h3 className="text-xl font-semibold text-destructive">{t('dashboard.failed_load_data')}</h3>
           <p className="text-muted-foreground mt-2">{error.message}</p>
           <Button variant="destructive" className="mt-4" onClick={() => refetch()}>
-            Retry
+            {t('common.retry')}
           </Button>
         </div>
       </DashboardLayout>
@@ -144,18 +141,18 @@ export default function AdminRequests() {
   }
 
   return (
-    <DashboardLayout title="All Requests">
+    <DashboardLayout title={t('dashboard.all_requests')}>
       <div className="space-y-6 animate-fade-in">
         <Link to="/admin" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Dashboard
+          {t('common.back_to_dashboard')}
         </Link>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold">All Clearance Requests</h2>
+            <h2 className="text-2xl font-bold">{t('dashboard.all_clearance_requests')}</h2>
             <p className="text-muted-foreground">
-              {filteredRequests.length} of {requests.length} requests
+              {t('dashboard.requests_count', { count: filteredRequests.length, total: requests.length })}
             </p>
           </div>
         </div>
@@ -167,7 +164,7 @@ export default function AdminRequests() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, ID, or program..."
+                  placeholder={t('dashboard.search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -176,13 +173,13 @@ export default function AdminRequests() {
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-48">
                   <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
+                  <SelectValue placeholder={t('dashboard.filter_by_status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="all">{t('dashboard.all_statuses')}</SelectItem>
+                  <SelectItem value="pending">{t('common.pending')}</SelectItem>
+                  <SelectItem value="approved">{t('common.approved')}</SelectItem>
+                  <SelectItem value="rejected">{t('common.rejected')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -207,7 +204,7 @@ export default function AdminRequests() {
                       {request.registrationNumber || request.studentIdNumber} • {request.program} • {request.email}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Submitted: {new Date(request.submittedAt).toLocaleString()}
+                      {t('dashboard.submitted_at_label', { date: new Date(request.submittedAt).toLocaleString() })}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -219,7 +216,7 @@ export default function AdminRequests() {
                             clearance.status === 'approved' ? 'bg-status-approved' :
                             clearance.status === 'rejected' ? 'bg-status-rejected' : 'bg-status-pending'
                           }`}
-                          title={`${getDepartmentLabel(dept as Department)}: ${clearance.status}`}
+                          title={`${t(`departments.${dept}`)}: ${t(`common.${clearance.status}`)}`}
                         />
                       ))}
                     </div>
@@ -236,7 +233,7 @@ export default function AdminRequests() {
               {expandedRequest === request.id && (
                 <div className="px-6 pb-6 border-t bg-muted/30 animate-fade-in">
                   <div className="pt-4 space-y-3">
-                    <h4 className="font-medium text-sm">Department Clearances</h4>
+                    <h4 className="font-medium text-sm">{t('dashboard.department_clearances')}</h4>
                     {Object.entries(request.departmentClearances).map(([deptKey, dept]) => (
                       <div 
                         key={deptKey}
@@ -244,7 +241,7 @@ export default function AdminRequests() {
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{getDepartmentLabel(deptKey as Department)}</span>
+                            <span className="font-medium">{t(`departments.${deptKey}`)}</span>
                             <StatusBadge status={dept.status} size="sm" />
                           </div>
                           {dept.processedAt && (
@@ -271,7 +268,7 @@ export default function AdminRequests() {
                               }}
                             >
                               <CheckCircle className="w-3 h-3 mr-1" />
-                              Override
+                              {t('dashboard.override')}
                             </Button>
                           )}
                           {dept.status !== 'rejected' && (
@@ -285,7 +282,7 @@ export default function AdminRequests() {
                               }}
                             >
                               <XCircle className="w-3 h-3 mr-1" />
-                              Override
+                              {t('dashboard.override')}
                             </Button>
                           )}
                         </div>
@@ -302,7 +299,7 @@ export default function AdminRequests() {
           <Card className="card-elevated">
             <CardContent className="py-12">
               <div className="text-center">
-                <p className="text-muted-foreground">No requests match your search criteria.</p>
+                <p className="text-muted-foreground">{t('dashboard.no_requests_found')}</p>
               </div>
             </CardContent>
           </Card>
@@ -312,19 +309,23 @@ export default function AdminRequests() {
         <Dialog open={!!overrideDialog} onOpenChange={() => setOverrideDialog(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Override Clearance Status</DialogTitle>
+              <DialogTitle>{t('dashboard.override_title')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to override the {overrideDialog?.department && getDepartmentLabel(overrideDialog.department)} clearance for {overrideDialog?.request.studentName} to "{overrideDialog?.newStatus}"?
+                {t('dashboard.override_desc', { 
+                  department: overrideDialog?.department && t(`departments.${overrideDialog.department}`),
+                  name: overrideDialog?.request.studentName,
+                  status: overrideDialog?.newStatus && t(`common.${overrideDialog.newStatus}`)
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
-                This action will be marked as an admin override and cannot be undone automatically.
+                {t('dashboard.override_note')}
               </p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOverrideDialog(null)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button 
                 onClick={confirmOverride}
@@ -333,7 +334,7 @@ export default function AdminRequests() {
                   : 'bg-status-rejected hover:bg-status-rejected/90'
                 }
               >
-                Confirm Override
+                {t('dashboard.confirm_override')}
               </Button>
             </DialogFooter>
           </DialogContent>

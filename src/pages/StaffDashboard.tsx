@@ -13,10 +13,12 @@ import {
 } from 'lucide-react';
 import { getDepartmentLabel, Department, DepartmentClearance } from '@/types';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function StaffDashboard() {
   const { user } = useAuth();
   const { getDepartmentRequests, requests } = useClearance();
+  const { t } = useTranslation();
   
   const department = user?.department as Department | undefined;
   const pendingRequests = department ? getDepartmentRequests(department) : [];
@@ -36,20 +38,20 @@ export default function StaffDashboard() {
   }, { total: 0, approved: 0, pending: 0, rejected: 0 });
 
   return (
-    <DashboardLayout title="Staff Dashboard">
+    <DashboardLayout title={t('dashboard.staff_dashboard')}>
       <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Welcome, {user?.name}</h2>
+            <h2 className="text-2xl font-bold">{t('dashboard.welcome_user', { name: user?.name })}</h2>
             <p className="text-muted-foreground">
-              {department && getDepartmentLabel(department)} Department
+              {department && getDepartmentLabel(department)} {t('dashboard.department')}
             </p>
           </div>
           <Link to="/staff/pending">
-            <Button className="gradient-primary">
+            <Button className="gradient-primary w-full sm:w-auto">
               <ClipboardCheck className="w-4 h-4 mr-2" />
-              Process Pending Requests
+              {t('dashboard.process_pending_requests')}
             </Button>
           </Link>
         </div>
@@ -64,7 +66,7 @@ export default function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{departmentStats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Requests</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.total_requests')}</p>
                 </div>
               </div>
             </CardContent>
@@ -78,7 +80,7 @@ export default function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{departmentStats.pending}</p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.pending')}</p>
                 </div>
               </div>
             </CardContent>
@@ -92,7 +94,7 @@ export default function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{departmentStats.approved}</p>
-                  <p className="text-sm text-muted-foreground">Approved</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.approved')}</p>
                 </div>
               </div>
             </CardContent>
@@ -106,7 +108,7 @@ export default function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{departmentStats.rejected}</p>
-                  <p className="text-sm text-muted-foreground">Rejected</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.rejected')}</p>
                 </div>
               </div>
             </CardContent>
@@ -116,15 +118,15 @@ export default function StaffDashboard() {
         {/* Pending Requests Preview */}
         <Card className="card-elevated">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <CardTitle>Pending Requests</CardTitle>
+                <CardTitle>{t('dashboard.pending_requests')}</CardTitle>
                 <CardDescription>
-                  Requests awaiting your review
+                  {t('dashboard.requests_awaiting_review')}
                 </CardDescription>
               </div>
               <Link to="/staff/pending">
-                <Button variant="outline" size="sm">View All</Button>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">{t('common.view_all')}</Button>
               </Link>
             </div>
           </CardHeader>
@@ -144,7 +146,7 @@ export default function StaffDashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground">
-                        Submitted {new Date(request.submittedAt).toLocaleDateString()}
+                        {t('dashboard.submitted')} {new Date(request.submittedAt).toLocaleDateString()}
                       </span>
                       <StatusBadge status="pending" size="sm" />
                     </div>
@@ -156,9 +158,9 @@ export default function StaffDashboard() {
                 <div className="p-3 bg-status-approved/10 rounded-full w-fit mx-auto mb-3">
                   <CheckCircle className="w-8 h-8 text-status-approved" />
                 </div>
-                <p className="font-medium">All caught up!</p>
+                <p className="font-medium">{t('dashboard.all_caught_up')}</p>
                 <p className="text-sm text-muted-foreground">
-                  No pending requests at the moment.
+                  {t('dashboard.no_pending_requests')}
                 </p>
               </div>
             )}

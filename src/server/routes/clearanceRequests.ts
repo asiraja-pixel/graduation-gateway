@@ -1,6 +1,9 @@
 import express from 'express';
-import { ClearanceRequest } from '../models/ClearanceRequest.js';
+import { ClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
+import { User } from '../models/User.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+
+type DepartmentClearance = IDepartmentClearance;
 
 const router = express.Router();
 
@@ -135,14 +138,17 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(404).json({ error: 'Clearance request not found' });
     }
 
+    // Fetch staff signature from DB
+    const staffUser = await User.findById(req.user!.id).select('signature');
+
     // Update department status
-    const deptClearances = (clearanceRequest.departmentClearances as Record<string, unknown>);
+    const deptClearances = (clearanceRequest.departmentClearances as Record<string, DepartmentClearance>);
     deptClearances[department] = {
       status,
       timestamp: new Date(),
       staffId: req.user!.id,
       staffName: req.user!.name,
-      staffSignature: req.user!.signature,
+      staffSignature: staffUser?.signature,
       comment: isAdmin ? (comment || 'Overridden by admin') : comment
     };
 

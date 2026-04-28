@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -33,10 +36,10 @@ export default function ForgotPassword() {
       if (response.ok) {
         setIsSubmitted(true);
       } else {
-        setError(data.error || 'Failed to send reset email');
+        setError(data.error || t('auth.failed_send_reset'));
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError(t('auth.network_error'));
     } finally {
       setIsLoading(false);
     }
@@ -45,21 +48,22 @@ export default function ForgotPassword() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <LanguageSelector className="absolute top-4 right-4 z-50" />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold">Reset Email Sent</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('auth.reset_email_sent')}</CardTitle>
             <CardDescription>
-              We've sent a password reset link to your email address.
+              {t('auth.reset_email_sent_desc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                Check your email inbox and spam folder for the reset link.
+                {t('auth.check_email_inbox')}
               </AlertDescription>
             </Alert>
             <div className="space-y-3">
@@ -69,7 +73,7 @@ export default function ForgotPassword() {
                 variant="outline"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Login
+                {t('auth.back_to_login')}
               </Button>
             </div>
           </CardContent>
@@ -80,26 +84,27 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <LanguageSelector className="absolute top-4 right-4 z-50" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <Mail className="w-8 h-8 text-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">Forgot Password?</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('auth.forgot_password_title')}</CardTitle>
           <CardDescription>
-            Enter your email address and we'll send you a link to reset your password.
+            {t('auth.forgot_password_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('auth.email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -115,26 +120,26 @@ export default function ForgotPassword() {
             )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Sending...' : 'Send Reset Link'}
+              {isLoading ? t('auth.sending') : t('auth.send_reset_link')}
             </Button>
 
             <div className="text-center space-y-2">
               <div className="text-sm text-muted-foreground">
-                Remember your password?{' '}
+                {t('auth.remember_password')}{' '}
                 <Link 
                   to="/login" 
                   className="text-primary hover:underline font-medium"
                 >
-                  Sign in
+                  {t('auth.sign_in')}
                 </Link>
               </div>
               <div className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                {t('auth.no_account')}{' '}
                 <Link 
                   to="/signup" 
                   className="text-primary hover:underline font-medium"
                 >
-                  Sign up
+                  {t('auth.sign_up')}
                 </Link>
               </div>
             </div>

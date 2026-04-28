@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import { 
   GraduationCap, 
   LogOut, 
@@ -15,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
+import { LanguageSelector } from './LanguageSelector';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -25,6 +27,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -34,19 +37,19 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
 
   const navItems = {
     student: [
-      { path: '/student', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/student/request', label: 'My Request', icon: FileText },
+      { path: '/student', label: t('dashboard.nav.dashboard'), icon: LayoutDashboard },
+      { path: '/student/request', label: t('dashboard.my_request'), icon: FileText },
     ],
     staff: [
-      { path: '/staff', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/staff/pending', label: 'Pending Requests', icon: ClipboardCheck },
-      { path: '/staff/history', label: 'History', icon: FileText },
+      { path: '/staff', label: t('dashboard.nav.dashboard'), icon: LayoutDashboard },
+      { path: '/staff/pending', label: t('dashboard.pending_requests'), icon: ClipboardCheck },
+      { path: '/staff/history', label: t('dashboard.history'), icon: FileText },
     ],
     admin: [
-      { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-      { path: '/admin/requests', label: 'All Requests', icon: ClipboardCheck },
-      { path: '/admin/users', label: 'Manage Users', icon: Users },
-      { path: '/admin/settings', label: 'Settings', icon: Settings },
+      { path: '/admin', label: t('dashboard.nav.dashboard'), icon: LayoutDashboard },
+      { path: '/admin/requests', label: t('dashboard.all_requests'), icon: ClipboardCheck },
+      { path: '/admin/users', label: t('dashboard.manage_users'), icon: Users },
+      { path: '/admin/settings', label: t('dashboard.settings'), icon: Settings },
     ],
   };
 
@@ -61,16 +64,17 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             <div className="flex items-center gap-3">
               <img src="/iuk_logo.png" alt="IUK Logo" className="w-10 h-10 rounded-lg" />
               <div>
-                <h1 className="text-xl font-bold">Clearance System</h1>
+                <h1 className="text-xl font-bold">{t('common.system_title')}</h1>
                 <p className="text-sm opacity-80">{title}</p>
               </div>
             </div>
             
             <div className="hidden md:flex items-center gap-4">
+              <LanguageSelector />
               <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-foreground/10 rounded-lg">
                 <User className="w-4 h-4" />
                 <span className="text-sm">{user?.name}</span>
-                <span className="text-xs opacity-70 capitalize">({user?.role})</span>
+                <span className="text-xs opacity-70 capitalize">({t(`auth.${user?.role || 'student'}`)})</span>
               </div>
               <Button 
                 variant="ghost" 
@@ -79,7 +83,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
                 className="text-primary-foreground hover:bg-primary-foreground/10"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                {t('common.logout')}
               </Button>
             </div>
 
@@ -125,10 +129,13 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
       {mobileMenuOpen && (
         <div className="md:hidden bg-card border-b shadow-lg animate-fade-in">
           <div className="container mx-auto px-4 py-2">
-            <div className="flex items-center gap-2 px-3 py-2 mb-2 bg-muted rounded-lg">
-              <User className="w-4 h-4" />
-              <span className="text-sm">{user?.name}</span>
-              <span className="text-xs text-muted-foreground capitalize">({user?.role})</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg flex-1 mr-2">
+                <User className="w-4 h-4" />
+                <span className="text-sm">{user?.name}</span>
+                <span className="text-xs text-muted-foreground capitalize">({t(`auth.${user?.role || 'student'}`)})</span>
+              </div>
+              <LanguageSelector className="text-foreground hover:bg-muted" />
             </div>
             {currentNavItems.map((item) => {
               const Icon = item.icon;
@@ -155,7 +162,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4 mr-3" />
-              Logout
+              {t('common.logout')}
             </Button>
           </div>
         </div>

@@ -26,8 +26,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useTranslation } from 'react-i18next';
 
 export default function StaffPending() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { getDepartmentRequests, processRequest } = useClearance();
   const { updateDepartmentStatus } = useSocket();
@@ -78,17 +80,17 @@ export default function StaffPending() {
   };
 
   return (
-    <DashboardLayout title="Pending Requests">
+    <DashboardLayout title={t('dashboard.pending_requests')}>
       <div className="space-y-6 animate-fade-in">
         <Link to="/staff" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Dashboard
+          {t('common.back_to_dashboard')}
         </Link>
 
         <div>
-          <h2 className="text-2xl font-bold">Pending Requests</h2>
+          <h2 className="text-2xl font-bold">{t('dashboard.pending_requests')}</h2>
           <p className="text-muted-foreground">
-            {department && getDepartmentLabel(department)} Department • {pendingRequests.length} pending
+            {department && getDepartmentLabel(department)} {t('dashboard.department')} • {pendingRequests.length} {t('common.pending').toLowerCase()}
           </p>
         </div>
 
@@ -121,13 +123,13 @@ export default function StaffPending() {
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="w-4 h-4" />
-                          <span>Submitted {new Date(request.submittedAt).toLocaleDateString()}</span>
+                          <span>{t('dashboard.submitted_date')} {new Date(request.submittedAt).toLocaleDateString()}</span>
                         </div>
                       </div>
 
                       {/* Other Departments Status */}
                       <div className="pt-4 border-t">
-                        <p className="text-sm font-medium mb-2">Other Departments</p>
+                        <p className="text-sm font-medium mb-2">{t('dashboard.other_departments')}</p>
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(request.departmentClearances as Record<string, DepartmentClearance>)
                             .map(([dept, data]) => ({
@@ -155,7 +157,7 @@ export default function StaffPending() {
                         onClick={() => handleAction(request, 'approve')}
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Approve
+                        {t('common.approve')}
                       </Button>
                       <Button 
                         variant="outline"
@@ -163,7 +165,7 @@ export default function StaffPending() {
                         onClick={() => handleAction(request, 'reject')}
                       >
                         <XCircle className="w-4 h-4 mr-2" />
-                        Reject
+                        {t('common.reject')}
                       </Button>
                     </div>
                   </div>
@@ -178,9 +180,9 @@ export default function StaffPending() {
                 <div className="p-4 bg-status-approved/10 rounded-full w-fit mx-auto mb-4">
                   <CheckCircle className="w-12 h-12 text-status-approved" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">All Caught Up!</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('dashboard.all_caught_up')}</h3>
                 <p className="text-muted-foreground">
-                  There are no pending requests for your department at the moment.
+                  {t('dashboard.no_pending_requests')}
                 </p>
               </div>
             </CardContent>
@@ -195,12 +197,12 @@ export default function StaffPending() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {actionType === 'approve' ? 'Approve Request' : 'Reject Request'}
+                {actionType === 'approve' ? t('dashboard.approve_request_title') : t('dashboard.reject_request_title')}
               </DialogTitle>
               <DialogDescription>
                 {actionType === 'approve' 
-                  ? `Are you sure you want to approve the clearance for ${selectedRequest?.studentName}?`
-                  : `Are you sure you want to reject the clearance for ${selectedRequest?.studentName}?`
+                  ? t('dashboard.approve_request_desc', { name: selectedRequest?.studentName })
+                  : t('dashboard.reject_request_desc', { name: selectedRequest?.studentName })
                 }
               </DialogDescription>
             </DialogHeader>
@@ -215,15 +217,15 @@ export default function StaffPending() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Comment {actionType === 'reject' ? '(recommended)' : '(optional)'}
+                  {t('dashboard.comment')} {actionType === 'reject' ? `(${t('dashboard.recommended')})` : `(${t('dashboard.optional')})`}
                 </label>
                 <Textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder={
                     actionType === 'reject' 
-                      ? 'Please provide a reason for rejection...'
-                      : 'Add any notes...'
+                      ? t('dashboard.rejection_reason_placeholder')
+                      : t('dashboard.notes_placeholder')
                   }
                   rows={3}
                 />
@@ -232,7 +234,7 @@ export default function StaffPending() {
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setSelectedRequest(null)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button 
                 onClick={confirmAction}
@@ -242,7 +244,7 @@ export default function StaffPending() {
                   : 'bg-status-rejected hover:bg-status-rejected/90'
                 }
               >
-                {isProcessing ? 'Processing...' : actionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+                {isProcessing ? t('common.processing') : actionType === 'approve' ? t('dashboard.confirm_approval') : t('dashboard.confirm_rejection')}
               </Button>
             </DialogFooter>
           </DialogContent>

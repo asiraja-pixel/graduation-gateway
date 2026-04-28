@@ -31,10 +31,12 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { getStudentRequest } = useClearance();
+  const { t } = useTranslation();
 
   const [pdfStage, setPdfStage] = useState<string | null>(null);
   const [showPhotoDialog, setShowShowPhotoDialog] = useState(false);
@@ -122,21 +124,21 @@ export default function StudentDashboard() {
   };
 
   return (
-    <DashboardLayout title="Student Dashboard">
+    <DashboardLayout title={t('dashboard.student_dashboard')}>
       <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold">Welcome, {user?.name}</h2>
-            <p className="text-muted-foreground">
-              Student ID: {user?.studentId} • {user?.program}
+            <h2 className="text-2xl font-bold">{t('dashboard.welcome_user', { name: user?.name })}</h2>
+            <p className="text-muted-foreground text-sm md:text-base">
+              {t('dashboard.student_id')}: {user?.studentId} • {user?.program}
             </p>
           </div>
           {!request && (
             <Link to="/student/request">
-              <Button className="gradient-primary">
+              <Button className="gradient-primary w-full md:w-auto">
                 <Send className="w-4 h-4 mr-2" />
-                Submit Clearance Request
+                {t('dashboard.submit_clearance_request')}
               </Button>
             </Link>
           )}
@@ -153,7 +155,7 @@ export default function StudentDashboard() {
                       <FileText className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Overall Status</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.overall_status')}</p>
                       <StatusBadge status={request.overallStatus} />
                     </div>
                   </div>
@@ -170,7 +172,7 @@ export default function StudentDashboard() {
                       <p className="text-2xl font-bold">
                         {stats?.approved}/{stats?.total}
                       </p>
-                      <p className="text-sm text-muted-foreground">Approved</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.approved')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -184,7 +186,7 @@ export default function StudentDashboard() {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats?.pending}</p>
-                      <p className="text-sm text-muted-foreground">Pending</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.pending')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -198,7 +200,7 @@ export default function StudentDashboard() {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats?.rejected}</p>
-                      <p className="text-sm text-muted-foreground">Rejected</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.rejected')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -208,9 +210,9 @@ export default function StudentDashboard() {
             {/* Department Clearances */}
             <Card className="card-elevated">
               <CardHeader>
-                <CardTitle>Department Clearances</CardTitle>
+                <CardTitle>{t('dashboard.department_clearances')}</CardTitle>
                 <CardDescription>
-                  Track the approval status of each department
+                  {t('dashboard.track_approval_status')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -236,9 +238,9 @@ export default function StudentDashboard() {
                           </p>
                           {dept.processedAt && (
                             <p className="text-xs text-muted-foreground">
-                              Processed:{' '}
+                              {t('dashboard.processed')}:{' '}
                               {new Date(dept.processedAt).toLocaleDateString()}
-                              {dept.staffName && ` by ${dept.staffName}`}
+                              {dept.staffName && ` ${t('dashboard.by')} ${dept.staffName}`}
                             </p>
                           )}
                         </div>
@@ -255,7 +257,7 @@ export default function StudentDashboard() {
                 ) && (
                   <div className="mt-6 p-4 bg-destructive/10 rounded-lg">
                     <h4 className="font-medium text-destructive mb-2">
-                      Rejection Comments
+                      {t('dashboard.rejection_comments')}
                     </h4>
                     {departmentClearancesArray
                       .filter((d) => d.status === 'rejected' && d.comment)
@@ -283,9 +285,9 @@ export default function StudentDashboard() {
                         <CheckCircle className="w-8 h-8 text-status-approved" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold">Congratulations!</h3>
+                        <h3 className="text-lg font-semibold">{t('dashboard.congratulations')}</h3>
                         <p className="text-muted-foreground">
-                          All departments have approved your clearance request.
+                          {t('dashboard.all_approved_desc')}
                           {pdfStage && (
                             <span className="ml-2 text-primary font-medium">
                               {pdfStage}
@@ -308,7 +310,7 @@ export default function StudentDashboard() {
                       ) : (
                         <>
                           <ImageIcon className="w-4 h-4 mr-2" />
-                          Generate Certificate
+                          {t('dashboard.generate_certificate')}
                         </>
                       )}
                     </Button>
@@ -321,9 +323,9 @@ export default function StudentDashboard() {
             <Dialog open={showPhotoDialog} onOpenChange={setShowShowPhotoDialog}>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Upload Certificate Photo</DialogTitle>
+                  <DialogTitle>{t('dashboard.upload_photo_title')}</DialogTitle>
                   <DialogDescription>
-                    Please upload a passport-sized photo to be attached to your official clearance certificate.
+                    {t('dashboard.upload_photo_desc')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-6 py-4">
@@ -333,14 +335,14 @@ export default function StudentDashboard() {
                     ) : (
                       <div className="text-center p-4">
                         <ImageIcon className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
-                        <p className="text-xs text-muted-foreground">Passport Photo</p>
+                        <p className="text-xs text-muted-foreground">{t('dashboard.passport_photo')}</p>
                       </div>
                     )}
                     <Label 
                       htmlFor="photo-upload" 
                       className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium"
                     >
-                      Change Photo
+                      {t('dashboard.change_photo')}
                     </Label>
                     <Input 
                       id="photo-upload" 
@@ -351,17 +353,19 @@ export default function StudentDashboard() {
                     />
                   </div>
                   <p className="text-xs text-center text-muted-foreground px-6">
-                    Note: This photo is only used for generating your PDF and is not stored permanently in our database for privacy.
+                    {t('dashboard.photo_privacy_note')}
                   </p>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowShowPhotoDialog(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setShowShowPhotoDialog(false)}>
+                    {t('dashboard.cancel')}
+                  </Button>
                   <Button 
                     className="gradient-primary" 
                     onClick={handleGenerateCertificate}
                     disabled={!studentPhoto}
                   >
-                    Generate & Download
+                    {t('dashboard.generate_download')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -375,18 +379,18 @@ export default function StudentDashboard() {
                     <CheckCircle2 className="w-10 h-10 text-status-approved" />
                   </div>
                   <div className="space-y-2">
-                    <DialogTitle className="text-2xl font-bold">Congratulations!</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold">{t('dashboard.success_title')}</DialogTitle>
                     <DialogDescription className="text-base">
-                      Your official clearance certificate has been generated successfully.
+                      {t('dashboard.success_desc')}
                     </DialogDescription>
                   </div>
                   <p className="text-muted-foreground">
-                    You have successfully completed the graduation clearance process at Islamic University of Kenya. We wish you the best in your future endeavors!
+                    {t('dashboard.success_message')}
                   </p>
                 </div>
                 <DialogFooter className="sm:justify-center">
                   <Button className="gradient-primary px-8" onClick={() => setShowSuccessDialog(false)}>
-                    Close
+                    {t('dashboard.close')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -401,15 +405,14 @@ export default function StudentDashboard() {
                   <FileText className="w-12 h-12 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  No Clearance Request Found
+                  {t('dashboard.no_request_title')}
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  You haven't submitted a clearance request yet. Start your
-                  graduation clearance process by submitting a new request.
+                  {t('dashboard.no_request_desc')}
                 </p>
                 <Link to="/student/request">
                   <Button className="gradient-primary">
-                    Submit New Request
+                    {t('dashboard.submit_new_request')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>

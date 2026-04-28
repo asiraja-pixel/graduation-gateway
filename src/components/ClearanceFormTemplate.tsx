@@ -102,13 +102,13 @@ const DeptSection: React.FC<DeptSectionProps> = ({ title, clearance }) => {
               <img 
                 src={clearance.staffSignature} 
                 alt="Staff Signature" 
-                crossOrigin="anonymous"
                 style={{ 
                   height: '100%', 
                   position: 'absolute', 
                   bottom: '2px', 
                   left: '0', 
-                  objectFit: 'contain' 
+                  objectFit: 'contain',
+                  maxWidth: '100%'
                 }} 
               />
             )}

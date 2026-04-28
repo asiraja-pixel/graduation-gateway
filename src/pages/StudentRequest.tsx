@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClearance } from '@/contexts/ClearanceContext';
@@ -14,6 +15,7 @@ import { AlertCircle, Send, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function StudentRequest() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { getStudentRequest, submitRequest } = useClearance();
   const { submitClearanceRequest } = useSocket();
@@ -50,21 +52,21 @@ export default function StudentRequest() {
 
   if (existingRequest) {
     return (
-      <DashboardLayout title="Clearance Request">
+      <DashboardLayout title={t('dashboard.submit_clearance_request')}>
         <Card className="card-elevated max-w-2xl mx-auto">
           <CardContent className="py-12">
             <div className="text-center">
               <div className="p-4 bg-primary/10 rounded-full w-fit mx-auto mb-4">
                 <CheckCircle className="w-12 h-12 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Request Already Submitted</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('dashboard.request_already_submitted')}</h3>
               <p className="text-muted-foreground mb-6">
-                You have already submitted a clearance request. You can track its progress on your dashboard.
+                {t('dashboard.request_already_submitted_desc')}
               </p>
               <Link to="/student">
                 <Button className="gradient-primary">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
+                  {t('common.back_to_dashboard')}
                 </Button>
               </Link>
             </div>
@@ -76,20 +78,20 @@ export default function StudentRequest() {
 
   if (submitted) {
     return (
-      <DashboardLayout title="Clearance Request">
+      <DashboardLayout title={t('dashboard.submit_clearance_request')}>
         <Card className="card-elevated max-w-2xl mx-auto animate-fade-in">
           <CardContent className="py-12">
             <div className="text-center">
               <div className="p-4 bg-status-approved/10 rounded-full w-fit mx-auto mb-4">
                 <CheckCircle className="w-12 h-12 text-status-approved" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Request Submitted Successfully!</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('dashboard.request_submitted_success')}</h3>
               <p className="text-muted-foreground mb-6">
-                Your clearance request has been submitted to all departments. You will receive notifications as each department processes your request.
+                {t('dashboard.request_submitted_success_desc')}
               </p>
               <Link to="/student">
                 <Button className="gradient-primary">
-                  View My Dashboard
+                  {t('common.view_all')}
                 </Button>
               </Link>
             </div>
@@ -100,40 +102,40 @@ export default function StudentRequest() {
   }
 
   return (
-    <DashboardLayout title="Submit Clearance Request">
+    <DashboardLayout title={t('dashboard.submit_clearance_request')}>
       <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
         <Link to="/student" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Dashboard
+          {t('common.back_to_dashboard')}
         </Link>
 
         <Card className="card-elevated">
           <CardHeader>
-            <CardTitle>New Clearance Request</CardTitle>
+            <CardTitle>{t('dashboard.new_clearance_request')}</CardTitle>
             <CardDescription>
-              Submit your graduation clearance request. This will be sent to all departments for approval.
+              {t('dashboard.new_clearance_request_desc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Student Information */}
               <div className="space-y-4">
-                <h3 className="font-medium">Student Information</h3>
+                <h3 className="font-medium">{t('dashboard.student_information')}</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Full Name</Label>
+                    <Label>{t('auth.full_name')}</Label>
                     <Input value={user?.name || ''} disabled className="bg-muted" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Email</Label>
+                    <Label>{t('auth.email')}</Label>
                     <Input value={user?.email || ''} disabled className="bg-muted" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="studentId">Student ID Number</Label>
+                    <Label htmlFor="studentId">{t('dashboard.student_id_label')}</Label>
                     <Input
                       id="studentId"
                       value={formData.studentIdNumber}
@@ -142,7 +144,7 @@ export default function StudentRequest() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="program">Program/Course</Label>
+                    <Label htmlFor="program">{t('dashboard.program_label')}</Label>
                     <Input
                       id="program"
                       value={formData.program}
@@ -155,9 +157,9 @@ export default function StudentRequest() {
 
               {/* Departments */}
               <div className="space-y-4">
-                <h3 className="font-medium">Departments to Clear</h3>
+                <h3 className="font-medium">{t('dashboard.departments_to_clear')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Your request will be sent to the following departments for approval:
+                  {t('dashboard.departments_to_clear_desc')}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {DEPARTMENTS.map((dept) => (
@@ -166,7 +168,7 @@ export default function StudentRequest() {
                       className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
                     >
                       <div className="w-2 h-2 bg-status-pending rounded-full" />
-                      <span className="text-sm">{dept.label}</span>
+                      <span className="text-sm">{t(`departments.${dept.value}`)}</span>
                     </div>
                   ))}
                 </div>
@@ -183,7 +185,7 @@ export default function StudentRequest() {
                     }
                   />
                   <Label htmlFor="confirm" className="text-sm leading-relaxed cursor-pointer">
-                    I confirm that all the information provided is accurate and I understand that my request will be reviewed by each department. Any pending dues or issues must be resolved before approval.
+                    {t('dashboard.confirm_details')}
                   </Label>
                 </div>
               </div>
@@ -192,9 +194,9 @@ export default function StudentRequest() {
               <div className="flex items-start gap-3 p-4 bg-status-pending/10 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-status-pending flex-shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium">Important Notice</p>
+                  <p className="font-medium">{t('dashboard.important_notice')}</p>
                   <p className="text-muted-foreground">
-                    Once submitted, you cannot modify this request. Ensure all your information is correct before proceeding.
+                    {t('dashboard.important_notice_desc')}
                   </p>
                 </div>
               </div>
@@ -205,11 +207,11 @@ export default function StudentRequest() {
                 disabled={!formData.confirmDetails || isSubmitting}
               >
                 {isSubmitting ? (
-                  'Submitting...'
+                  t('common.submitting')
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Submit Clearance Request
+                    {t('dashboard.submit_clearance_request')}
                   </>
                 )}
               </Button>

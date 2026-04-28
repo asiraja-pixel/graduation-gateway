@@ -2,7 +2,9 @@ import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User.js';
-import { ClearanceRequest } from '../models/ClearanceRequest.js';
+import { ClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
+
+type DepartmentClearance = IDepartmentClearance;
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -141,14 +143,17 @@ export class SocketService {
             return;
           }
 
+          // Fetch staff signature from DB
+          const staffUser = await User.findById(socket.userId).select('signature');
+
           // Update department status
-          const deptClearances = clearanceRequest.departmentClearances as Record<string, unknown>;
+          const deptClearances = clearanceRequest.departmentClearances as Record<string, DepartmentClearance>;
           deptClearances[department] = {
             status,
             timestamp: new Date(),
             staffId: socket.userId,
             staffName: socket.user!.name,
-            staffSignature: socket.user!.signature,
+            staffSignature: staffUser?.signature,
             comment
           };
 

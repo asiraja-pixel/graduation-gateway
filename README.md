@@ -1,6 +1,6 @@
 # Graduation Gateway - IUK Clearance System
 
-A unified Graduation Clearance System with a React frontend and an Express/Node.js backend. This system streamlines the graduation process for IUK (IUK) students and staff through real-time updates and secure authentication.
+A unified Graduation Clearance System with a React frontend and an Express/Node.js backend. This system streamlines the graduation process for IUK students and staff through real-time updates, multi-language support, and secure authentication.
 
 ## 🏗️ Architecture Overview
 
@@ -21,27 +21,36 @@ A unified Graduation Clearance System with a React frontend and an Express/Node.
 - **Secure Storage**: Passwords hashed using `bcrypt` (12 salt rounds).
 - **JWT Integration**: Token-based authentication for both API and Socket.IO connections.
 - **Forgot Password**: Complete token-based reset flow via email.
-- **IUK Branding**: Unified "IUK Clearance" institutional branding across login and signup.
-- **Staff Departments**: 5 pre-defined departments (Library, Finance, Accommodation, IT, Academic Office).
+- **IUK Branding**: Unified "IUK Clearance" institutional branding across the entire application.
+
+### 🌍 Multi-Language Support
+- **Full Localization**: Support for English, Swahili, Arabic (RTL), and French.
+- **Seamless Switching**: Instant language switching without page reload.
+- **Cultural Adaptation**: RTL support for Arabic language.
 
 ### 🔄 Real-time Clearance System
 - **Live Status Updates**: Instant clearance status changes across all clients using Socket.IO.
 - **Department Rooms**: Staff join specific rooms to manage their department's requests.
 - **Automated Notifications**: Real-time alerts for new requests and status changes.
+- **Signature Integration**: Digital signatures for staff members during clearance.
 
 ### 📧 SMTP Email Integration
-- **Dynamic URL Detection**: Auto-detects frontend URLs (8080, 8081, etc.) for email links.
+- **Dynamic URL Detection**: Auto-detects frontend URLs for email links.
 - **Professional Templates**: Responsive HTML emails for password resets and welcome messages.
 - **Gmail Support**: Pre-configured for Gmail SMTP with app passwords.
 
 ## 📂 Project Structure
 
 - `src/`: React frontend source code (Vite-based)
+  - `src/components/`: Reusable UI components (shadcn/ui)
+  - `src/contexts/`: React Context providers (Auth, Socket, Clearance)
+  - `src/locales/`: Translation files (en, sw, ar, fr)
+  - `src/utils/`: Shared utility functions
 - `src/server/`: Express backend source code
-- `src/components/`: Reusable UI components (shadcn/ui)
-- `src/contexts/`: React Context providers (Auth, Socket, Clearance)
+  - `src/server/models/`: Mongoose schemas
+  - `src/server/routes/`: API endpoints
+  - `src/server/services/`: Business logic and Socket.IO services
 - `public/`: Static assets for the frontend
-- `dist/`: Build artifacts
 
 ## 🛠️ Getting Started
 
@@ -87,7 +96,7 @@ npm start
 - `npm run build`: Build both frontend and backend for production.
 - `npm start`: Start the production server.
 - `npm test`: Run vitest for frontend.
-- `npm run lint`: Run ESLint.
+- `npm run lint`: Run ESLint for code quality.
 
 ## 🛡️ Security Measures
 - **Password Security**: No plain text storage; all passwords hashed.
@@ -96,4 +105,4 @@ npm start
 - **CORS Configuration**: Restrictive origins for production environments.
 
 ---
-*Documentation consolidated from project implementation reports.*
+*IUK Graduation Clearance System - Streamlining your journey to graduation.*

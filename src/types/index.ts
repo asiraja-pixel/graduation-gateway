@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 export type UserRole = 'student' | 'staff' | 'admin';
 
 export type ClearanceStatus = 'pending' | 'approved' | 'rejected' | 'completed';
@@ -73,5 +75,5 @@ export const DEPARTMENTS: { value: Department; label: string }[] = [
 ];
 
 export const getDepartmentLabel = (dept: Department): string => {
-  return DEPARTMENTS.find(d => d.value === dept)?.label || dept;
+  return i18n.t(`departments.${dept}`) || DEPARTMENTS.find(d => d.value === dept)?.label || dept;
 };

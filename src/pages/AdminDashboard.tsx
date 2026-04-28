@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, ClearanceRequest } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -46,6 +47,7 @@ const fetchRequests = async (token: string): Promise<ClearanceRequest[]> => {
 
 export default function AdminDashboard() {
   const { token } = useAuth();
+  const { t } = useTranslation();
 
   const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useQuery<User[], Error>({
     queryKey: ['users'], 
@@ -79,10 +81,10 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Admin Dashboard">
+      <DashboardLayout title={t('dashboard.admin_dashboard')}>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="ml-2 text-muted-foreground">Loading system data...</p>
+          <p className="ml-2 text-muted-foreground">{t('dashboard.loading_data')}</p>
         </div>
       </DashboardLayout>
     );
@@ -90,13 +92,13 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <DashboardLayout title="Admin Dashboard">
+      <DashboardLayout title={t('dashboard.admin_dashboard')}>
         <div className="flex flex-col items-center justify-center h-64 bg-destructive/10 rounded-lg">
           <AlertTriangle className="w-10 h-10 text-destructive mb-4" />
-          <h3 className="text-xl font-semibold text-destructive">Failed to Load Data</h3>
+          <h3 className="text-xl font-semibold text-destructive">{t('dashboard.failed_load_data')}</h3>
           <p className="text-muted-foreground mt-2">{error.message}</p>
           <Button variant="destructive" className="mt-4" onClick={() => window.location.reload()}>
-            Retry
+            {t('common.retry')}
           </Button>
         </div>
       </DashboardLayout>
@@ -104,27 +106,27 @@ export default function AdminDashboard() {
   }
 
   return (
-    <DashboardLayout title="Admin Dashboard">
+    <DashboardLayout title={t('dashboard.admin_dashboard')}>
       <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold">System Overview</h2>
+            <h2 className="text-2xl font-bold">{t('dashboard.system_overview')}</h2>
             <p className="text-muted-foreground">
-              Manage clearance requests and system users
+              {t('dashboard.manage_clearance_requests')}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Link to="/admin/requests">
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <ClipboardCheck className="w-4 h-4 mr-2" />
-                All Requests
+                {t('dashboard.all_requests')}
               </Button>
             </Link>
             <Link to="/admin/users">
-              <Button className="gradient-primary">
+              <Button className="gradient-primary w-full sm:w-auto">
                 <Users className="w-4 h-4 mr-2" />
-                Manage Users
+                {t('dashboard.manage_users')}
               </Button>
             </Link>
           </div>
@@ -140,7 +142,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Requests</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.total_requests')}</p>
                 </div>
               </div>
             </CardContent>
@@ -154,7 +156,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.pending}</p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.pending')}</p>
                 </div>
               </div>
             </CardContent>
@@ -168,7 +170,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.approved}</p>
-                  <p className="text-sm text-muted-foreground">Approved</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.approved')}</p>
                 </div>
               </div>
             </CardContent>
@@ -182,7 +184,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.rejected}</p>
-                  <p className="text-sm text-muted-foreground">Rejected</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.rejected')}</p>
                 </div>
               </div>
             </CardContent>
@@ -196,17 +198,17 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Analytics
+                {t('dashboard.analytics')}
               </CardTitle>
               <CardDescription>
-                System performance metrics
+                {t('dashboard.system_performance')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium">Approval Rate</span>
+                    <span className="text-sm font-medium">{t('dashboard.approval_rate')}</span>
                     <span className="text-sm text-muted-foreground">{approvalRate}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -220,15 +222,15 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-3 gap-4 pt-4 border-t">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-status-approved">{stats.approved}</p>
-                    <p className="text-xs text-muted-foreground">Approved</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.approved')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-status-pending">{stats.pending}</p>
-                    <p className="text-xs text-muted-foreground">Pending</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.pending')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-status-rejected">{stats.rejected}</p>
-                    <p className="text-xs text-muted-foreground">Rejected</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.rejected')}</p>
                   </div>
                 </div>
               </div>
@@ -238,18 +240,18 @@ export default function AdminDashboard() {
           {/* Users Card */}
           <Card className="card-elevated">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    Users
+                    {t('dashboard.users')}
                   </CardTitle>
                   <CardDescription>
-                    System user distribution
+                    {t('dashboard.user_distribution')}
                   </CardDescription>
                 </div>
                 <Link to="/admin/users">
-                  <Button variant="outline" size="sm">Manage</Button>
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">{t('dashboard.manage')}</Button>
                 </Link>
               </div>
             </CardHeader>
@@ -258,21 +260,21 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-primary" />
-                    <span>Students</span>
+                    <span>{t('auth.student')}</span>
                   </div>
                   <span className="font-semibold">{stats.students}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-accent" />
-                    <span>Staff</span>
+                    <span>{t('auth.staff')}</span>
                   </div>
                   <span className="font-semibold">{stats.staff}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-purple-500" />
-                    <span>Admins</span>
+                    <span>{t('auth.admin')}</span>
                   </div>
                   <span className="font-semibold">{stats.admins}</span>
                 </div>
@@ -286,11 +288,11 @@ export default function AdminDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent Requests</CardTitle>
-                <CardDescription>Latest clearance submissions</CardDescription>
+                <CardTitle>{t('dashboard.recent_requests')}</CardTitle>
+                <CardDescription>{t('dashboard.latest_submissions')}</CardDescription>
               </div>
               <Link to="/admin/requests">
-                <Button variant="outline" size="sm">View All</Button>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">{t('dashboard.view_all')}</Button>
               </Link>
             </div>
           </CardHeader>

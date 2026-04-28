@@ -16,7 +16,6 @@ export interface AuthRequest extends Request {
     address?: string;
     startYear?: string;
     endYear?: string;
-    signature?: string;
   };
 }
 

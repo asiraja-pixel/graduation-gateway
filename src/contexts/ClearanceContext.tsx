@@ -7,6 +7,7 @@ import {
 } from '@/types';
 import { useAuth } from './AuthContext';
 import { useSocket } from './SocketContext';
+import { normalizeClearances } from '@/utils/clearanceUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -20,20 +21,6 @@ interface ClearanceContextType {
 }
 
 const ClearanceContext = createContext<ClearanceContextType | undefined>(undefined);
-
-// Helper to normalize departmentClearances from backend (could be array or object)
-const normalizeClearances = (clearances: unknown): ClearanceRequest['departmentClearances'] => {
-  if (Array.isArray(clearances)) {
-    const obj: Record<string, DepartmentClearance> = {};
-    clearances.forEach((dc: DepartmentClearance) => {
-      if (dc.department) {
-        obj[dc.department.toLowerCase()] = dc;
-      }
-    });
-    return obj as ClearanceRequest['departmentClearances'];
-  }
-  return clearances as ClearanceRequest['departmentClearances'];
-};
 
 export function ClearanceProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<ClearanceRequest[]>([]);

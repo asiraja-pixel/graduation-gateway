@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CountrySelect } from '@/components/CountrySelect';
+import SignaturePad from '@/components/SignaturePad';
 import { DEPARTMENTS } from '@/types';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -32,40 +35,41 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signup, isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
 
-  // Schools and Programs Mapping
+  // Schools and Programs Mapping with translation keys
   const schoolPrograms = [
     {
-      school: 'School of Sharia & Islamic Studies',
+      key: 'sharia',
       programs: [
-        'Bachelor of Arts in Islamic Sharia',
-        'Bachelor of Arts in Arabic Language',
-        'Diploma in Islamic Banking and Finance',
-        'Diploma in Islamic Psychology',
-        'Diploma in Arabic Language and Islamic Studies',
-        'Certificate in Islamic Banking and Finance',
-        'Certificate in Arabic Language and Islamic Studies'
+        { key: 'sharia_ba', english: 'Bachelor of Arts in Islamic Sharia' },
+        { key: 'arabic_ba', english: 'Bachelor of Arts in Arabic Language' },
+        { key: 'islamic_banking_dip', english: 'Diploma in Islamic Banking and Finance' },
+        { key: 'islamic_psych_dip', english: 'Diploma in Islamic Psychology' },
+        { key: 'arabic_islamic_dip', english: 'Diploma in Arabic Language and Islamic Studies' },
+        { key: 'islamic_banking_cert', english: 'Certificate in Islamic Banking and Finance' },
+        { key: 'arabic_islamic_cert', english: 'Certificate in Arabic Language and Islamic Studies' }
       ]
     },
     {
-      school: 'School of Business Management',
+      key: 'business',
       programs: [
-        'Bachelor of Business Management',
-        'Diploma in Business Management',
-        'Certificate in Business Management'
+        { key: 'business_ba', english: 'Bachelor of Business Management' },
+        { key: 'business_dip', english: 'Diploma in Business Management' },
+        { key: 'business_cert', english: 'Certificate in Business Management' }
       ]
     },
     {
-      school: 'School of Education',
+      key: 'education',
       programs: [
-        'Bachelor of Education (B.Ed)'
+        { key: 'education_ba', english: 'Bachelor of Education (B.Ed)' }
       ]
     },
     {
-      school: 'School of Informatics & Technology',
+      key: 'informatics',
       programs: [
-        'Bachelor of Information Technology',
-        'Diploma in Business Information Technology'
+        { key: 'it_ba', english: 'Bachelor of Information Technology' },
+        { key: 'bit_dip', english: 'Diploma in Business Information Technology' }
       ]
     }
   ];
@@ -80,44 +84,28 @@ export default function Signup() {
 
   const departments = DEPARTMENTS;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit
-        setError('Signature file is too large. Please use a smaller image (max 1MB).');
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSignature(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
     // Basic validation
     if (!name || !email || !registrationNumber || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+      setError(t('auth.fill_all_fields') || 'Please fill in all fields');
       return;
     }
 
     if (accountType === 'staff' && !department) {
-      setError('Please select a department');
+      setError(t('auth.select_department') || 'Please select a department');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.passwords_not_match') || 'Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t('auth.password_too_short') || 'Password must be at least 6 characters long');
       return;
     }
 
@@ -129,7 +117,7 @@ export default function Signup() {
       
       if (accountType === 'student') {
         if (!program || !nationality || !gender || !phoneNumber || !address || !startYear || !endYear) {
-          setError('Please fill in all student details');
+          setError(t('auth.fill_student_details') || 'Please fill in all student details');
           setIsLoading(false);
           return;
         }
@@ -150,7 +138,7 @@ export default function Signup() {
         );
       } else {
         if (!department || !signature) {
-          setError('Please provide your department and signature');
+          setError(t('auth.provide_dept_signature') || 'Please provide your department and draw your signature');
           setIsLoading(false);
           return;
         }
@@ -160,41 +148,45 @@ export default function Signup() {
       if (result.success) {
         // On success, redirect to login
         navigate('/login', { 
-          state: { 
-            message: 'Account created successfully! Please sign in.' 
+          state: {
+            message: t('auth.signup_success') || 'Account created successfully! Please sign in.' 
           } 
         });
       } else {
-        setError(result.error || 'Failed to create account. Please try again.');
+        setError(result.error || t('auth.signup_failed') || 'Failed to create account. Please try again.');
       }
     } catch (err) {
-      setError('An error occurred during signup. Please try again.');
+      setError(t('common.error_occurred') || 'An error occurred during signup. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
+
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-hero p-12 flex-col justify-between">
         <div>
           <div className="flex items-center gap-3 text-primary-foreground">
             <img src="/iuk_logo.png" alt="IUK Logo" className="w-12 h-12 rounded-xl" />
             <div>
-              <h1 className="text-2xl font-bold">IUK</h1>
-              <p className="text-sm opacity-80">Clearance System</p>
+              <h1 className="text-2xl font-bold">{t('landing.title') || 'IUK'}</h1>
+              <p className="text-sm opacity-80">{t('landing.subtitle') || 'Clearance System'}</p>
             </div>
           </div>
         </div>
         
         <div className="text-primary-foreground">
           <h2 className="text-4xl font-bold mb-4">
-            Join Our<br />IUK Clearance System
+            {t('auth.signup_hero_title') || 'Join Our IUK Clearance System'}
           </h2>
           <p className="text-lg opacity-80 max-w-md">
-            Create your account to start IUK clearance process. 
-            Track your progress and get cleared efficiently.
+            {t('auth.signup_hero_subtitle') || 'Create your account to start IUK clearance process. Track your progress and get cleared efficiently.'}
           </p>
         </div>
 
@@ -204,7 +196,7 @@ export default function Signup() {
 
             <div className="text-3xl font-bold">4+</div>
 
-            <div className="text-sm opacity-70">Schools</div>
+            <div className="text-sm opacity-70">{t('landing.schools') || 'Schools'}</div>
 
           </div>
 
@@ -212,7 +204,7 @@ export default function Signup() {
 
             <div className="text-3xl font-bold">13+</div>
 
-            <div className="text-sm opacity-70">Programs</div>
+            <div className="text-sm opacity-70">{t('landing.programs') || 'Programs'}</div>
 
           </div>
 
@@ -220,7 +212,7 @@ export default function Signup() {
 
             <div className="text-3xl font-bold">100%</div>
 
-            <div className="text-sm opacity-70">Digital Process</div>
+            <div className="text-sm opacity-70">{t('landing.digital_process') || 'Digital Process'}</div>
 
           </div>
 
@@ -228,7 +220,7 @@ export default function Signup() {
 
             <div className="text-3xl font-bold">24/7</div>
 
-            <div className="text-sm opacity-70">Access</div>
+            <div className="text-sm opacity-70">{t('landing.access') || 'Access'}</div>
 
           </div>
 
@@ -242,14 +234,14 @@ export default function Signup() {
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
             <img src="/iuk_logo.png" alt="IUK Logo" className="w-10 h-10 rounded-lg" />
             <div>
-              <h1 className="text-xl font-bold">IUK Clearance</h1>
+              <h1 className="text-xl font-bold">{t('landing.title') || 'IUK Clearance'}</h1>
             </div>
           </div>
 
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-foreground">Create Account</h2>
+            <h2 className="text-3xl font-bold text-foreground">{t('auth.signup')}</h2>
             <p className="mt-2 text-muted-foreground">
-              Join the IUK clearance system
+              {t('auth.signup_subtitle_form') || 'Join the IUK clearance system'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               <a 
@@ -260,16 +252,16 @@ export default function Signup() {
                   navigate('/');
                 }}
               >
-                ← Back to home
+                ← {t('common.back_to_home')}
               </a>
             </p>
           </div>
 
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-xl">Sign Up</CardTitle>
+              <CardTitle className="text-xl">{t('auth.signup')}</CardTitle>
               <CardDescription>
-                Fill in your information to create an account
+                {t('auth.signup_subtitle') || 'Fill in your information to create an account'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -283,7 +275,7 @@ export default function Signup() {
 
                 {/* Account Type Selection */}
                 <div className="space-y-2">
-                  <Label>Account Type</Label>
+                  <Label>{t('auth.account_type') || 'Account Type'}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       type="button"
@@ -292,7 +284,7 @@ export default function Signup() {
                       className="flex items-center gap-2"
                     >
                       <User className="w-4 h-4" />
-                      Student
+                      {t('auth.student')}
                     </Button>
                     <Button
                       type="button"
@@ -301,14 +293,14 @@ export default function Signup() {
                       className="flex items-center gap-2"
                     >
                       <Briefcase className="w-4 h-4" />
-                      Staff
+                      {t('auth.staff')}
                     </Button>
                   </div>
                 </div>
 
                 {/* Name Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">{t('auth.full_name') || 'Full Name'}</Label>
                   <div className="relative">
                     <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -325,13 +317,13 @@ export default function Signup() {
 
                 {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t('auth.email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="you@university.edu"
+                      placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
@@ -343,7 +335,7 @@ export default function Signup() {
                 {/* Registration Number Field */}
                 <div className="space-y-2">
                   <Label htmlFor="registrationNumber">
-                    {accountType === 'student' ? 'Student ID' : 'Staff ID'}
+                    {accountType === 'student' ? (t('auth.reg_number') || 'Student ID') : (t('auth.staff_id') || 'Staff ID')}
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -363,22 +355,22 @@ export default function Signup() {
                 {accountType === 'student' && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="program">Program of Study</Label>
+                      <Label htmlFor="program">{t('auth.program') || 'Program of Study'}</Label>
                       <div className="relative">
                         <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                         <Select value={program} onValueChange={setProgram}>
                           <SelectTrigger className="pl-10">
-                            <SelectValue placeholder="Select your program" />
+                            <SelectValue placeholder={t('auth.select_program') || "Select your program"} />
                           </SelectTrigger>
                           <SelectContent>
                             {schoolPrograms.map((school) => (
-                              <div key={school.school}>
+                              <div key={school.key}>
                                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                                  {school.school}
+                                  {t(`schools.${school.key}`)}
                                 </div>
                                 {school.programs.map((prog) => (
-                                  <SelectItem key={prog} value={prog}>
-                                    {prog}
+                                  <SelectItem key={prog.key} value={prog.english}>
+                                    {t(`programs.${prog.key}`)}
                                   </SelectItem>
                                 ))}
                               </div>
@@ -390,7 +382,7 @@ export default function Signup() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Country / Nationality</Label>
+                        <Label>{t('auth.nationality') || 'Country / Nationality'}</Label>
                         <CountrySelect
                           value={nationality}
                           onValueChange={(_country, nat, callingCode) => {
@@ -400,22 +392,22 @@ export default function Signup() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="gender">Gender</Label>
+                        <Label htmlFor="gender">{t('auth.gender') || 'Gender'}</Label>
                         <Select value={gender} onValueChange={setGender}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
+                            <SelectValue placeholder={t('auth.select_gender') || "Select gender"} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Male">{t('auth.male')}</SelectItem>
+                            <SelectItem value="Female">{t('auth.female')}</SelectItem>
+                            <SelectItem value="Other">{t('auth.other')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Label htmlFor="phoneNumber">{t('auth.phone_number') || 'Phone Number'}</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         {countryCallingCode && (
@@ -435,7 +427,7 @@ export default function Signup() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
+                      <Label htmlFor="address">{t('auth.address') || 'Address'}</Label>
                       <Input
                         id="address"
                         placeholder="e.g. P.O. Box 123, Nairobi"
@@ -447,7 +439,7 @@ export default function Signup() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="startYear">Start Year</Label>
+                        <Label htmlFor="startYear">{t('auth.start_year') || 'Start Year'}</Label>
                         <Input
                           id="startYear"
                           type="number"
@@ -458,7 +450,7 @@ export default function Signup() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="endYear">End Year</Label>
+                        <Label htmlFor="endYear">{t('auth.end_year') || 'End Year'}</Label>
                         <Input
                           id="endYear"
                           type="number"
@@ -476,17 +468,17 @@ export default function Signup() {
                 {accountType === 'staff' && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
+                      <Label htmlFor="department">{t('auth.department') || 'Department'}</Label>
                       <div className="relative">
                         <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Select value={department} onValueChange={setDepartment}>
                           <SelectTrigger className="pl-10">
-                            <SelectValue placeholder="Select your department" />
+                            <SelectValue placeholder={t('auth.select_department') || "Select your department"} />
                           </SelectTrigger>
                           <SelectContent>
                             {departments.map((dept) => (
                               <SelectItem key={dept.value} value={dept.value}>
-                                {dept.label}
+                                {t(`departments.${dept.value}`)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -494,33 +486,18 @@ export default function Signup() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signature">Signature (Image)</Label>
-                      <div className="relative">
-                        <Input
-                          id="signature"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="cursor-pointer"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Upload a clear image of your signature (PNG or JPG).
-                        </p>
-                        {signature && (
-                          <div className="mt-2 p-2 border rounded-md bg-muted/30">
-                            <img src={signature} alt="Signature Preview" className="h-12 object-contain mx-auto" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <SignaturePad
+                      label={t('auth.signature') || "Your Signature"}
+                      onSave={(dataUrl) => setSignature(dataUrl)}
+                      onClear={() => setSignature(undefined)}
+                      existingSignature={signature}
+                    />
                   </>
                 )}
 
                 {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('auth.password')}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -538,7 +515,7 @@ export default function Signup() {
 
                 {/* Confirm Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t('auth.confirm_password') || 'Confirm Password'}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -559,7 +536,7 @@ export default function Signup() {
                   className="w-full gradient-primary"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {isLoading ? (t('common.loading') || 'Creating Account...') : (t('auth.signup') || 'Create Account')}
                 </Button>
               </form>
             </CardContent>
@@ -568,7 +545,7 @@ export default function Signup() {
           {/* Sign In Link */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
+              {t('auth.have_account') || 'Already have an account?'} {' '}
               <a 
                 href="/login" 
                 className="text-primary hover:underline font-medium"
@@ -577,7 +554,7 @@ export default function Signup() {
                   navigate('/login');
                 }}
               >
-                Sign in here
+                {t('auth.login') || 'Sign in here'}
               </a>
             </p>
           </div>

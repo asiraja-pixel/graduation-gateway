@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -15,10 +16,12 @@ import {
   Clock,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  PenLine
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import SignaturePad from '@/components/SignaturePad';
 import {
   Select,
   SelectContent,
@@ -31,11 +34,14 @@ import { cn } from '@/lib/utils';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export default function AdminSettings() {
-  const { token } = useAuth();
+  const { t } = useTranslation();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const [adminSignature, setAdminSignature] = useState<string | undefined>(undefined);
+  const [signatureSaving, setSignatureSaving] = useState(false);
   const [settings, setSettings] = useState({
     systemName: 'Graduation Clearance System',
     allowNewRequests: true,
@@ -85,6 +91,33 @@ export default function AdminSettings() {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (user?.signature) {
+      setAdminSignature(user.signature);
+    }
+  }, [user]);
+
+  const handleSaveSignature = async () => {
+    if (!adminSignature || !token) return;
+    setSignatureSaving(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/users/me/signature`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ signature: adminSignature })
+      });
+      if (!res.ok) throw new Error('Failed to save signature');
+      toast({ title: t('admin_settings.signature_saved'), description: t('admin_settings.signature_saved_desc') });
+    } catch (error) {
+      toast({ title: t('common.error'), description: t('admin_settings.signature_save_error_desc'), variant: 'destructive' });
+    } finally {
+      setSignatureSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -99,16 +132,16 @@ export default function AdminSettings() {
 
       if (response.ok) {
         toast({
-          title: "Settings Saved",
-          description: "System configuration has been updated successfully.",
+          title: t('admin_settings.settings_saved'),
+          description: t('admin_settings.settings_saved_desc'),
         });
       } else {
         throw new Error('Failed to save settings');
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update system settings. Please try again.",
+        title: t('common.error'),
+        description: t('admin_settings.settings_save_error_desc'),
         variant: "destructive",
       });
     } finally {
@@ -118,22 +151,22 @@ export default function AdminSettings() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Settings">
+      <DashboardLayout title={t('admin_settings.title')}>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="ml-2 text-muted-foreground">Loading settings...</p>
+          <p className="ml-2 text-muted-foreground">{t('admin_settings.loading_settings')}</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="System Settings">
+    <DashboardLayout title={t('admin_settings.title')}>
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-10">
         <div className="flex items-center justify-between">
           <Link to="/admin" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Dashboard
+            {t('admin_settings.back_to_dashboard')}
           </Link>
           <Button 
             className="gradient-primary" 
@@ -145,7 +178,7 @@ export default function AdminSettings() {
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Save Changes
+            {t('admin_settings.save_changes')}
           </Button>
         </div>
 
@@ -157,28 +190,35 @@ export default function AdminSettings() {
               className={cn("w-full justify-start gap-2", activeTab === 'general' && "bg-primary/10 text-primary hover:bg-primary/20")}
               onClick={() => setActiveTab('general')}
             >
-              <Shield className="w-4 h-4" /> General
+              <Shield className="w-4 h-4" /> {t('admin_settings.general')}
             </Button>
             <Button 
               variant={activeTab === 'notifications' ? 'secondary' : 'ghost'} 
               className={cn("w-full justify-start gap-2", activeTab === 'notifications' && "bg-primary/10 text-primary hover:bg-primary/20")}
               onClick={() => setActiveTab('notifications')}
             >
-              <Bell className="w-4 h-4" /> Notifications
+              <Bell className="w-4 h-4" /> {t('admin_settings.notifications')}
             </Button>
             <Button 
               variant={activeTab === 'localization' ? 'secondary' : 'ghost'} 
               className={cn("w-full justify-start gap-2", activeTab === 'localization' && "bg-primary/10 text-primary hover:bg-primary/20")}
               onClick={() => setActiveTab('localization')}
             >
-              <Globe className="w-4 h-4" /> Localization
+              <Globe className="w-4 h-4" /> {t('admin_settings.localization')}
             </Button>
             <Button 
               variant={activeTab === 'deadlines' ? 'secondary' : 'ghost'} 
               className={cn("w-full justify-start gap-2", activeTab === 'deadlines' && "bg-primary/10 text-primary hover:bg-primary/20")}
               onClick={() => setActiveTab('deadlines')}
             >
-              <Clock className="w-4 h-4" /> Deadlines
+              <Clock className="w-4 h-4" /> {t('admin_settings.deadlines')}
+            </Button>
+            <Button 
+              variant={activeTab === 'signature' ? 'secondary' : 'ghost'} 
+              className={cn("w-full justify-start gap-2", activeTab === 'signature' && "bg-primary/10 text-primary hover:bg-primary/20")}
+              onClick={() => setActiveTab('signature')}
+            >
+              <PenLine className="w-4 h-4" /> {t('admin_settings.signature')}
             </Button>
           </div>
 
@@ -188,12 +228,12 @@ export default function AdminSettings() {
               <>
                 <Card className="card-elevated">
                   <CardHeader>
-                    <CardTitle className="text-lg">General Configuration</CardTitle>
-                    <CardDescription>Basic system behavior and identity</CardDescription>
+                    <CardTitle className="text-lg">{t('admin_settings.general_config')}</CardTitle>
+                    <CardDescription>{t('admin_settings.general_config_desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="systemName">System Name</Label>
+                      <Label htmlFor="systemName">{t('admin_settings.system_name')}</Label>
                       <Input 
                         id="systemName" 
                         value={settings.systemName}
@@ -202,8 +242,8 @@ export default function AdminSettings() {
                     </div>
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Allow New Requests</Label>
-                        <p className="text-sm text-muted-foreground">Enable students to submit new clearance requests</p>
+                        <Label className="text-base">{t('admin_settings.allow_new_requests')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('admin_settings.allow_new_requests_desc')}</p>
                       </div>
                       <Switch 
                         checked={settings.allowNewRequests}
@@ -212,8 +252,8 @@ export default function AdminSettings() {
                     </div>
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-destructive/20">
                       <div className="space-y-0.5">
-                        <Label className="text-base text-destructive">Maintenance Mode</Label>
-                        <p className="text-sm text-muted-foreground">Disable the system for all users except admins</p>
+                        <Label className="text-base text-destructive">{t('admin_settings.maintenance_mode')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('admin_settings.maintenance_mode_desc')}</p>
                       </div>
                       <Switch 
                         checked={settings.maintenanceMode}
@@ -225,12 +265,12 @@ export default function AdminSettings() {
 
                 <Card className="card-elevated">
                   <CardHeader>
-                    <CardTitle className="text-lg">Academic Context</CardTitle>
-                    <CardDescription>Current academic year and period</CardDescription>
+                    <CardTitle className="text-lg">{t('admin_settings.academic_context')}</CardTitle>
+                    <CardDescription>{t('admin_settings.academic_context_desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="academicYear">Academic Year</Label>
+                      <Label htmlFor="academicYear">{t('admin_settings.academic_year')}</Label>
                       <Input 
                         id="academicYear" 
                         value={settings.academicYear}
@@ -239,7 +279,7 @@ export default function AdminSettings() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="semester">Semester</Label>
+                      <Label htmlFor="semester">{t('admin_settings.semester')}</Label>
                       <Input 
                         id="semester" 
                         value={settings.semester}
@@ -256,24 +296,24 @@ export default function AdminSettings() {
               <>
                 <Card className="card-elevated">
                   <CardHeader>
-                    <CardTitle className="text-lg">Email Notifications</CardTitle>
-                    <CardDescription>Configure where system alerts are sent</CardDescription>
+                    <CardTitle className="text-lg">{t('admin_settings.email_notifications')}</CardTitle>
+                    <CardDescription>{t('admin_settings.email_notifications_desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="emails">Admin Notification Emails</Label>
+                      <Label htmlFor="emails">{t('admin_settings.admin_notification_emails')}</Label>
                       <Input 
                         id="emails" 
                         value={settings.notificationEmails}
                         onChange={e => setSettings(prev => ({ ...prev, notificationEmails: e.target.value }))}
-                        placeholder="admin@example.com, registrar@example.com"
+                        placeholder={t('admin_settings.admin_notification_emails_placeholder')}
                       />
-                      <p className="text-xs text-muted-foreground">Separate multiple emails with commas</p>
+                      <p className="text-xs text-muted-foreground">{t('admin_settings.admin_notification_emails_help')}</p>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Enable Email Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Send automated emails for system events</p>
+                        <Label className="text-base">{t('admin_settings.enable_email_alerts')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('admin_settings.enable_email_alerts_desc')}</p>
                       </div>
                       <Switch 
                         checked={settings.emailNotifications}
@@ -285,14 +325,14 @@ export default function AdminSettings() {
 
                 <Card className="card-elevated">
                   <CardHeader>
-                    <CardTitle className="text-lg">Alert Triggers</CardTitle>
-                    <CardDescription>When should the system send notifications?</CardDescription>
+                    <CardTitle className="text-lg">{t('admin_settings.alert_triggers')}</CardTitle>
+                    <CardDescription>{t('admin_settings.alert_triggers_desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                       <div className="space-y-0.5">
-                        <Label className="text-base">New Requests</Label>
-                        <p className="text-sm text-muted-foreground">Notify staff when a new request is submitted</p>
+                        <Label className="text-base">{t('admin_settings.new_requests')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('admin_settings.new_requests_desc')}</p>
                       </div>
                       <Switch 
                         checked={settings.notifyOnNewRequest}
@@ -301,8 +341,8 @@ export default function AdminSettings() {
                     </div>
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Status Changes</Label>
-                        <p className="text-sm text-muted-foreground">Notify students when their request status is updated</p>
+                        <Label className="text-base">{t('admin_settings.status_changes')}</Label>
+                        <p className="text-sm text-muted-foreground">{t('admin_settings.status_changes_desc')}</p>
                       </div>
                       <Switch 
                         checked={settings.notifyOnStatusChange}
@@ -317,12 +357,12 @@ export default function AdminSettings() {
             {activeTab === 'localization' && (
               <Card className="card-elevated">
                 <CardHeader>
-                  <CardTitle className="text-lg">Regional Settings</CardTitle>
-                  <CardDescription>Timezone and formatting options</CardDescription>
+                  <CardTitle className="text-lg">{t('admin_settings.regional_settings')}</CardTitle>
+                  <CardDescription>{t('admin_settings.regional_settings_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
+                    <Label htmlFor="timezone">{t('admin_settings.timezone')}</Label>
                     <Select 
                       value={settings.timezone}
                       onValueChange={value => setSettings(prev => ({ ...prev, timezone: value }))}
@@ -338,7 +378,7 @@ export default function AdminSettings() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="dateFormat">Date Format</Label>
+                    <Label htmlFor="dateFormat">{t('admin_settings.date_format')}</Label>
                     <Select 
                       value={settings.dateFormat}
                       onValueChange={value => setSettings(prev => ({ ...prev, dateFormat: value }))}
@@ -360,12 +400,12 @@ export default function AdminSettings() {
             {activeTab === 'deadlines' && (
               <Card className="card-elevated">
                 <CardHeader>
-                  <CardTitle className="text-lg">Deadlines & Constraints</CardTitle>
-                  <CardDescription>System-wide dates and limits</CardDescription>
+                  <CardTitle className="text-lg">{t('admin_settings.deadlines_constraints')}</CardTitle>
+                  <CardDescription>{t('admin_settings.deadlines_constraints_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="deadline">Clearance Deadline</Label>
+                    <Label htmlFor="deadline">{t('admin_settings.clearance_deadline')}</Label>
                     <Input 
                       id="deadline" 
                       type="date"
@@ -374,7 +414,7 @@ export default function AdminSettings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="earlyClearance">Early Clearance Window (Days)</Label>
+                    <Label htmlFor="earlyClearance">{t('admin_settings.early_clearance_days')}</Label>
                     <Input 
                       id="earlyClearance" 
                       type="number"
@@ -384,8 +424,8 @@ export default function AdminSettings() {
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                     <div className="space-y-0.5">
-                      <Label className="text-base">Auto-archive</Label>
-                      <p className="text-sm text-muted-foreground">Archive completed requests after 90 days</p>
+                      <Label className="text-base">{t('admin_settings.auto_archive')}</Label>
+                      <p className="text-sm text-muted-foreground">{t('admin_settings.auto_archive_desc')}</p>
                     </div>
                     <Switch 
                       checked={settings.autoArchiveRequests}
@@ -396,9 +436,42 @@ export default function AdminSettings() {
               </Card>
             )}
 
+            {activeTab === 'signature' && (
+              <Card className="card-elevated">
+                <CardHeader>
+                  <CardTitle className="text-lg">{t('admin_settings.admin_signature')}</CardTitle>
+                  <CardDescription>
+                    {t('admin_settings.admin_signature_desc')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <SignaturePad 
+                    label={t('admin_settings.draw_signature')} 
+                    existingSignature={adminSignature} 
+                    onSave={(dataUrl) => setAdminSignature(dataUrl)} 
+                    onClear={() => setAdminSignature(undefined)} 
+                  />
+                  <Button 
+                    onClick={handleSaveSignature} 
+                    disabled={!adminSignature || signatureSaving} 
+                    className="gradient-primary"
+                  >
+                    {signatureSaving ? ( 
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('admin_settings.saving')}...</> 
+                    ) : ( 
+                      <><Save className="w-4 h-4 mr-2" />{t('admin_settings.save_signature')}</> 
+                    )} 
+                  </Button>
+                  <p className="text-xs text-muted-foreground"> 
+                    {t('admin_settings.signature_storage_notice')}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <CardFooter className="bg-muted/30 py-3 rounded-lg flex items-center gap-2 mt-6">
               <CheckCircle2 className="w-4 h-4 text-status-approved" />
-              <span className="text-xs font-medium">Auto-save is disabled. Click Save Changes above to apply.</span>
+              <span className="text-xs font-medium">{t('admin_settings.autosave_notice')}</span>
             </CardFooter>
           </div>
         </div>

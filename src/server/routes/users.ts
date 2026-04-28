@@ -24,6 +24,30 @@ router.get('/', authenticateToken, isAdmin, async (req, res) => {
   }
 });
 
+// PATCH /api/users/me/signature - Update current user's signature
+router.patch('/me/signature', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { signature } = req.body;
+    if (!signature) {
+      return res.status(400).json({ error: 'Signature data is required' });
+    }
+    // Validate it is a PNG data URL
+    if (!signature.startsWith('data:image/png;base64,')) {
+      return res.status(400).json({ error: 'Invalid signature format' });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user!.id,
+      { signature },
+      { new: true, select: '-password' }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'Signature updated successfully', signature: user.signature });
+  } catch (error) {
+    console.error('Update signature error:', error);
+    res.status(500).json({ error: 'Failed to update signature' });
+  }
+});
+
 // GET /api/users/:id - Get user by ID
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: express.Response) => {
   try {
