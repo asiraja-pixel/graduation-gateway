@@ -141,7 +141,7 @@ export default function StaffDashboard() {
                     <div>
                       <p className="font-medium">{request.studentName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {request.studentIdNumber} • {request.program}
+                        {request.studentIdNumber} • {t(`programs.${request.program}`)}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">

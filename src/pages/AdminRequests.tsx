@@ -201,7 +201,7 @@ export default function AdminRequests() {
                       <StatusBadge status={request.overallStatus} size="sm" />
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {request.registrationNumber || request.studentIdNumber} • {request.program} • {request.email}
+                      {request.registrationNumber || request.studentIdNumber} • {t(`programs.${request.program}`)} • {request.email}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {t('dashboard.submitted_at_label', { date: new Date(request.submittedAt).toLocaleString() })}

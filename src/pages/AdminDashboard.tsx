@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-medium">{request.studentName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {request.registrationNumber || request.studentIdNumber} • {request.program}
+                      {request.registrationNumber || request.studentIdNumber} • {t(`programs.${request.program}`)}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

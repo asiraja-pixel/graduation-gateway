@@ -11,10 +11,24 @@ const router = express.Router();
 router.get('/', authenticateToken, async (_req: AuthRequest, res) => {
   try {
     const requests = await ClearanceRequest.find({})
+      .populate('studentId', 'name registrationNumber')
       .sort({ submittedAt: -1 })
       .limit(100);
     
-    res.json(requests);
+    // Ensure we use the latest name from the User model if available
+    const formattedRequests = requests.map(req => {
+      const doc = req.toObject();
+      const student = req.studentId as any;
+      return {
+        ...doc,
+        id: doc._id?.toString() || doc.id,
+        studentName: student?.name || doc.studentName,
+        registrationNumber: student?.registrationNumber || doc.registrationNumber,
+        studentId: student?._id?.toString() || doc.studentId
+      };
+    });
+    
+    res.json(formattedRequests);
   } catch (error) {
     console.error('Error fetching clearance requests:', error);
     res.status(500).json({ error: 'Failed to fetch clearance requests' });
@@ -25,9 +39,22 @@ router.get('/', authenticateToken, async (_req: AuthRequest, res) => {
 router.get('/my', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const requests = await ClearanceRequest.find({ studentId: req.user!.id })
+      .populate('studentId', 'name registrationNumber')
       .sort({ submittedAt: -1 });
     
-    res.json(requests);
+    const formattedRequests = requests.map(req => {
+      const doc = req.toObject();
+      const student = req.studentId as any;
+      return {
+        ...doc,
+        id: doc._id?.toString() || doc.id,
+        studentName: student?.name || doc.studentName,
+        registrationNumber: student?.registrationNumber || doc.registrationNumber,
+        studentId: student?._id?.toString() || doc.studentId
+      };
+    });
+    
+    res.json(formattedRequests);
   } catch (error) {
     console.error('Error fetching user clearance requests:', error);
     res.status(500).json({ error: 'Failed to fetch clearance requests' });
@@ -37,18 +64,29 @@ router.get('/my', authenticateToken, async (req: AuthRequest, res) => {
 // Get single clearance request
 router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const request = await ClearanceRequest.findById(req.params.id);
+    const request = await ClearanceRequest.findById(req.params.id)
+      .populate('studentId', 'name registrationNumber');
     
     if (!request) {
       return res.status(404).json({ error: 'Clearance request not found' });
     }
 
+    const doc = request.toObject();
+    const student = request.studentId as any;
+    const formattedRequest = {
+      ...doc,
+      id: doc._id?.toString() || doc.id,
+      studentName: student?.name || doc.studentName,
+      registrationNumber: student?.registrationNumber || doc.registrationNumber,
+      studentId: student?._id?.toString() || doc.studentId
+    };
+
     // Check if user has permission to view this request
-    if (req.user!.accountType === 'student' && request.studentId !== req.user!.id) {
+    if (req.user!.accountType === 'student' && formattedRequest.studentId !== req.user!.id) {
       return res.status(403).json({ error: 'Unauthorized to view this request' });
     }
 
-    res.json(request);
+    res.json(formattedRequest);
   } catch (error) {
     console.error('Error fetching clearance request:', error);
     res.status(500).json({ error: 'Failed to fetch clearance request' });

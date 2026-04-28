@@ -50,6 +50,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
             ...d, 
             id: d.id || d._id || '',
             studentId: d.studentId || d.registrationNumber || '',
+            studentIdNumber: d.registrationNumber || d.studentIdNumber || '',
             departmentClearances: normalizeClearances(d.departmentClearances)
           }));
           setRequests(normalized);
@@ -81,6 +82,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         const normalized = { 
           ...newRequest, 
           id: newRequest.id || newRequest._id || '',
+          studentIdNumber: newRequest.registrationNumber || newRequest.studentIdNumber || '',
           departmentClearances: normalizeClearances(newRequest.departmentClearances)
         };
         console.log('[ClearanceContext] Received new_request event:', normalized.studentName);
@@ -102,6 +104,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         const updated = { 
           ...update.updatedRequest, 
           id: update.updatedRequest.id || update.updatedRequest._id || '',
+          studentIdNumber: update.updatedRequest.registrationNumber || update.updatedRequest.studentIdNumber || '',
           departmentClearances: normalizeClearances(update.updatedRequest.departmentClearances)
         };
         console.log('[ClearanceContext] Received status_changed event');

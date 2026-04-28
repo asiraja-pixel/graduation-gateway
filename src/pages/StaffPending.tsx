@@ -115,7 +115,7 @@ export default function StaffPending() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <GraduationCap className="w-4 h-4" />
-                          <span>{request.program}</span>
+                          <span>{t(`programs.${request.program}`)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Mail className="w-4 h-4" />
@@ -211,7 +211,7 @@ export default function StaffPending() {
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium">{selectedRequest?.studentName}</p>
                 <p className="text-sm text-muted-foreground">
-                  {selectedRequest?.studentIdNumber} • {selectedRequest?.program}
+                  {selectedRequest?.studentIdNumber} • {selectedRequest?.program && t(`programs.${selectedRequest.program}`)}
                 </p>
               </div>
 

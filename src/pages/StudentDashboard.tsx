@@ -131,7 +131,7 @@ export default function StudentDashboard() {
           <div>
             <h2 className="text-2xl font-bold">{t('dashboard.welcome_user', { name: user?.name })}</h2>
             <p className="text-muted-foreground text-sm md:text-base">
-              {t('dashboard.student_id')}: {user?.studentId} • {user?.program}
+              {t('dashboard.student_id')}: {user?.studentId} • {user?.program && t(`programs.${user.program}`)}
             </p>
           </div>
           {!request && (

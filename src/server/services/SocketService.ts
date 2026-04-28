@@ -95,23 +95,35 @@ export class SocketService {
 
           await clearanceRequest.save();
 
+          // Fetch populated request for emission
+          const populatedRequest = await ClearanceRequest.findById(clearanceRequest._id)
+            .populate('studentId', 'name registrationNumber')
+            .lean();
+
+          const formattedRequest = {
+            ...populatedRequest,
+            id: populatedRequest!._id.toString(),
+            studentName: (populatedRequest!.studentId as any)?.name || populatedRequest!.studentName,
+            registrationNumber: (populatedRequest!.studentId as any)?.registrationNumber || populatedRequest!.registrationNumber
+          };
+
           // Emit to all department rooms
           const departments = ['library', 'finance', 'accommodation', 'dean', 'registrar', 'department'];
           departments.forEach(dept => {
             this.io.to(`department_${dept}`).emit('new_request', {
-              ...clearanceRequest.toObject(),
+              ...formattedRequest,
               type: 'new_request'
             });
           });
 
           // Also broadcast to all connected clients (e.g., dashboard views)
           this.io.emit('new_request', {
-            ...clearanceRequest.toObject(),
+            ...formattedRequest,
             type: 'new_request'
           });
 
           // Emit to student
-          socket.emit('request_submitted', clearanceRequest.toObject());
+          socket.emit('request_submitted', formattedRequest);
 
           console.log(`New clearance request submitted by ${socket.user.name}`);
 

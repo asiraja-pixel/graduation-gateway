@@ -75,7 +75,7 @@ export default function RealtimeClearanceDashboard() {
                     <div>
                       <CardTitle className="text-lg">{request.studentName}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        {request.registrationNumber} • {request.program}
+                        {request.registrationNumber} • {t(`programs.${request.program}`)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Submitted: {new Date(request.submittedAt).toLocaleString()}
