@@ -172,9 +172,9 @@
     "view_all": "عرض الكل",
     "department": "القسم",
     "processing_history": "سجل المعالجة",
-    "processed_count": "عدد المعالجة",
-    "comment_label": "تعليق",
-    "processed_by": "تمت المعالجة بواسطة",
+    "processed_count": "عدد المعalجة",
+    "comment_label": "تعليق: {{comment}}",
+    "processed_by": "تمت المعالجة بواسطة {{name}}",
     "all_clearance_requests": "جميع طلبات براءة الذمة",
     "requests_count": "عدد الطلبات",
     "search_placeholder": "بحث...",
@@ -259,7 +259,18 @@
     "student_dashboard": "لوحة تحكم الطالب",
     "staff_dashboard": "لوحة تحكم الموظف",
     "admin_dashboard": "لوحة تحكم المدير",
-    "clearance_system": "نظام براءة الذمة"
+    "clearance_system": "نظام براءة الذمة",
+    "no_history_yet": "لا يوجد سجل بعد",
+    "no_history_desc": "لم تقم بمعالجة أي طلبات حتى الآن.",
+    "realtime_clearance_system": "نظام براءة الذمة في الوقت الفعلي",
+    "realtime_sync_active": "مزامنة الوقت الفعلي نشطة",
+    "realtime_sync_desc": "النظام متصل حالياً ويتلقى تحديثات في الوقت الفعلي لجميع إجراءات براءة الذمة.",
+    "student_actions": "إجراءات الطالب",
+    "student_actions_desc": "شاهد كيف تظهر طلبات الطلاب فوراً على لوحة التحكم.",
+    "staff_actions": "إجراءات الموظفين",
+    "staff_actions_desc": "تتم مزامنة إجراءات الموافقة والرفض من الموظفين عبر جميع الأجهزة.",
+    "live_updates": "تحديثات مباشرة",
+    "live_updates_desc": "تحدث تغييرات الحالة المرئية والإشعارات دون الحاجة لتحديث الصفحة."
   },
   "departments": {
     "library": "المكتبة",
@@ -345,6 +356,8 @@
     "draw_signature": "ارسم توقيعك أدناه",
     "saving": "جاري الحفظ...",
     "save_signature": "حفظ التوقيع",
-    "signature_storage_notice": "يتم تخزين توقيعك بشكل آمن ومشفر."
+    "signature_storage_notice": "يتم تخزين توقيعك بشكل آمن ومشفر.",
+    "profile_updated": "تم تحديث الملف الشخصي",
+    "profile_updated_desc": "تم تحديث معلومات ملفك الشخصي بنجاح."
   }
 }

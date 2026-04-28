@@ -173,8 +173,10 @@
     "department": "Idara",
     "processing_history": "Historia ya Uchakataji",
     "processed_count": "Idadi Iliyochakatwa",
-    "comment_label": "Maoni",
-    "processed_by": "Ilichakatwa na",
+    "comment_label": "Maoni: {{comment}}",
+    "processed_by": "Ilichakatwa na {{name}}",
+    "no_history_yet": "Bado hakuna historia",
+    "no_history_desc": "Bado hujachakata maombi yoyote.",
     "all_clearance_requests": "Maombi Yote ya Ukaguzi",
     "requests_count": "Idadi ya Maombi",
     "search_placeholder": "Tafuta...",
@@ -259,7 +261,16 @@
     "student_dashboard": "Dashibodi ya Mwanafunzi",
     "staff_dashboard": "Dashibodi ya Mfanyakazi",
     "admin_dashboard": "Dashibodi ya Msimamizi",
-    "clearance_system": "Mfumo wa Ukaguzi"
+    "clearance_system": "Mfumo wa Ukaguzi",
+    "realtime_clearance_system": "Mfumo wa Ukaguzi wa Wakati Halisi",
+    "realtime_sync_active": "Malandanisho ya Wakati Halisi Yapo",
+    "realtime_sync_desc": "Mfumo kwa sasa umeunganishwa na unapokea sasisho za wakati halisi kwa hatua zote za ukaguzi.",
+    "student_actions": "Hatua za Mwanafunzi",
+    "student_actions_desc": "Tazama maombi ya wanafunzi yanavyoonekana papo hapo kwenye dashibodi.",
+    "staff_actions": "Hatua za Wafanyakazi",
+    "staff_actions_desc": "Hatua za kuidhinisha na kukataa kutoka kwa wafanyakazi zinalandanishwa kwenye vifaa vyote.",
+    "live_updates": "Sasisho za Moja kwa Moja",
+    "live_updates_desc": "Mabadiliko ya hali ya kuona na arifa hutokea bila kuonyesha ukurasa upya."
   },
   "departments": {
     "library": "Maktaba",
@@ -270,24 +281,24 @@
     "department": "Mkuu wa Idara"
   },
   "programs": {
-    "sharia_ba": "Bachelor of Sharia",
-    "arabic_ba": "Bachelor of Arabic Language",
-    "bit_dip": "Diploma in Business Information Technology",
-    "bit_ba": "Bachelor of Information Technology",
-    "bba": "Bachelor of Business Administration",
-    "education_ba": "Bachelor of Education",
-    "Diploma in Business Information Technology": "Diploma in Business Information Technology",
-    "Bachelor of Information Technology": "Bachelor of Information Technology",
-    "Bachelor of Business Administration": "Bachelor of Business Administration",
-    "Bachelor of Sharia": "Bachelor of Sharia",
-    "Bachelor of Arabic Language": "Bachelor of Arabic Language",
-    "Bachelor of Education": "Bachelor of Education"
+    "sharia_ba": "Shahada ya Sharia",
+    "arabic_ba": "Shahada ya Lugha ya Kiarabu",
+    "bit_dip": "Stashahada ya Teknolojia ya Habari ya Biashara",
+    "bit_ba": "Shahada ya Teknolojia ya Habari",
+    "bba": "Shahada ya Usimamizi wa Biashara",
+    "education_ba": "Shahada ya Elimu",
+    "Diploma in Business Information Technology": "Stashahada ya Teknolojia ya Habari ya Biashara",
+    "Bachelor of Information Technology": "Shahada ya Teknolojia ya Habari",
+    "Bachelor of Business Administration": "Shahada ya Usimamizi wa Biashara",
+    "Bachelor of Sharia": "Shahada ya Sharia",
+    "Bachelor of Arabic Language": "Shahada ya Lugha ya Kiarabu",
+    "Bachelor of Education": "Shahada ya Elimu"
   },
   "schools": {
-    "sharia": "School of Sharia & Islamic Studies",
-    "business": "School of Business & Economics",
-    "education": "School of Education",
-    "informatics": "School of Informatics & Modern Technology"
+    "sharia": "Shule ya Sharia na Masomo ya Kiislamu",
+    "business": "Shule ya Biashara na Uchumi",
+    "education": "Shule ya Elimu",
+    "informatics": "Shule ya Informatiki na Teknolojia ya Kisasa"
   },
   "admin_settings": {
     "title": "Mipangilio ya Msimamizi",
@@ -345,6 +356,8 @@
     "draw_signature": "Chora sahihi yako hapa chini",
     "saving": "Inahifadhi...",
     "save_signature": "Hifadhi Sahihi",
-    "signature_storage_notice": "Sahihi yako imehifadhiwa kwa usalama na imesimbwa."
+    "signature_storage_notice": "Sahihi yako imehifadhiwa kwa usalama na imesimbwa.",
+    "profile_updated": "Wasifu Umesasishwa",
+    "profile_updated_desc": "Maelezo ya wasifu wako yamesasishwa kwa mafanikio."
   }
 }

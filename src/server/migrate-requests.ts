@@ -27,6 +27,8 @@ async function migrate() {
     for (const req of requests) {
       const student = await User.findById(req.studentId);
       if (student) {
+        req.studentName = student.name;
+        req.registrationNumber = student.registrationNumber;
         req.nationality = student.nationality;
         req.gender = student.gender;
         req.phoneNumber = student.phoneNumber;

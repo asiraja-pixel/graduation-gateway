@@ -173,8 +173,10 @@
     "department": "Département",
     "processing_history": "Historique de Traitement",
     "processed_count": "Nombre de Traitements",
-    "comment_label": "Commentaire",
-    "processed_by": "Traité par",
+    "comment_label": "Commentaire : {{comment}}",
+    "processed_by": "Traité par {{name}}",
+    "no_history_yet": "Aucun historique pour le moment",
+    "no_history_desc": "Vous n'avez pas encore traité de demandes.",
     "all_clearance_requests": "Toutes les Demandes de Quitus",
     "requests_count": "Nombre de Demandes",
     "search_placeholder": "Rechercher...",
@@ -259,7 +261,16 @@
     "student_dashboard": "Tableau de Bord Étudiant",
     "staff_dashboard": "Tableau de Bord Personnel",
     "admin_dashboard": "Tableau de Bord Administrateur",
-    "clearance_system": "Système de Quitus"
+    "clearance_system": "Système de Quitus",
+    "realtime_clearance_system": "Système de Quitus en Temps Réel",
+    "realtime_sync_active": "Synchronisation en Temps Réel Active",
+    "realtime_sync_desc": "Le système est actuellement connecté et reçoit des mises à jour en temps réel pour toutes les actions de quitus.",
+    "student_actions": "Actions de l'Étudiant",
+    "student_actions_desc": "Observez les demandes des étudiants apparaître instantanément sur le tableau de bord.",
+    "staff_actions": "Actions du Personnel",
+    "staff_actions_desc": "Les actions d'approbation et de rejet du personnel sont synchronisées sur tous les appareils.",
+    "live_updates": "Mises à jour en Direct",
+    "live_updates_desc": "Les changements de statut visuels et les notifications se produisent sans rafraîchissement de la page."
   },
   "departments": {
     "library": "Bibliothèque",
@@ -345,6 +356,8 @@
     "draw_signature": "Dessinez votre signature ci-dessous",
     "saving": "Enregistrement...",
     "save_signature": "Enregistrer la Signature",
-    "signature_storage_notice": "Votre signature est stockée de manière sécurisée et cryptée."
+    "signature_storage_notice": "Votre signature est stockée de manière sécurisée et cryptée.",
+    "profile_updated": "Profil mis à jour",
+    "profile_updated_desc": "Vos informations de profil ont été mises à jour avec succès."
   }
 }

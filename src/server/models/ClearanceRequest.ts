@@ -48,7 +48,7 @@ const DepartmentClearanceSchema = new Schema<IDepartmentClearance>({
 
 const ClearanceRequestSchema = new Schema<IClearanceRequest>({
   studentId: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
     ref: 'User'
   },
