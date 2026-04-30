@@ -4,15 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { useSocket } from '@/contexts/SocketContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Department, ClearanceStatus, ClearanceRequest, DepartmentClearance } from '@/types';
-
-const STATUS_COLORS: Record<ClearanceStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  completed: 'bg-blue-100 text-blue-800'
-};
+import { getStatusBadge } from '@/utils/statusUtils';
+import { getProgramKey } from '@/utils/clearanceUtils';
+import { useTranslation } from 'react-i18next';
 
 export default function RealtimeClearanceDashboard() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { requests, updateDepartmentStatus, isConnected } = useSocket();
 
@@ -21,14 +18,6 @@ export default function RealtimeClearanceDashboard() {
     if (comment !== null) {
       updateDepartmentStatus(requestId, department, status, comment);
     }
-  };
-
-  const getStatusBadge = (status: ClearanceStatus) => {
-    return (
-      <Badge className={STATUS_COLORS[status]}>
-        {status.toUpperCase()}
-      </Badge>
-    );
   };
 
   if (!isConnected) {
@@ -75,7 +64,7 @@ export default function RealtimeClearanceDashboard() {
                     <div>
                       <CardTitle className="text-lg">{request.studentName}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        {request.registrationNumber} • {t(`programs.${request.program}`)}
+                        {request.registrationNumber} • {t(`programs.${getProgramKey(request.program)}`)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Submitted: {new Date(request.submittedAt).toLocaleString()}

@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User.js';
 import { ClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
+import { emailService } from './EmailService.js';
 
 type DepartmentClearance = IDepartmentClearance;
 
@@ -155,6 +156,8 @@ export class SocketService {
             return;
           }
 
+          const oldOverallStatus = clearanceRequest.overallStatus;
+
           // Fetch staff signature from DB
           const staffUser = await User.findById(socket.userId).select('signature');
 
@@ -170,11 +173,41 @@ export class SocketService {
           };
 
           // Update overall status
-          const requestWithMethod = clearanceRequest as unknown as { updateOverallStatus: () => void };
+          const requestWithMethod = clearanceRequest as any;
           if (typeof requestWithMethod.updateOverallStatus === 'function') {
             requestWithMethod.updateOverallStatus();
           }
           await clearanceRequest.save();
+
+          // Trigger email notification if clearance is completed or rejected
+          if (
+            (clearanceRequest.overallStatus === 'completed' || clearanceRequest.overallStatus === 'rejected') && 
+            clearanceRequest.overallStatus !== oldOverallStatus
+          ) {
+            try {
+              // Populate student info to get email
+              const populatedRequest = await ClearanceRequest.findById(clearanceRequest._id).populate('studentId', 'name email');
+              const student = populatedRequest?.studentId as any;
+              
+              if (student && student.email) {
+                const deptUpdates = Object.entries(clearanceRequest.departmentClearances).map(([key, value]: [string, any]) => ({
+                  name: key.charAt(0).toUpperCase() + key.slice(1),
+                  status: value.status,
+                  comment: value.comment
+                }));
+
+                await emailService.sendClearanceStatusUpdateEmail(
+                  student.email,
+                  student.name,
+                  clearanceRequest.overallStatus,
+                  deptUpdates
+                );
+                console.log(`✅ [Socket] Clearance completion email sent to student: ${student.email}`);
+              }
+            } catch (emailError) {
+              console.error('⚠️ [Socket] Failed to send clearance update email:', emailError);
+            }
+          }
 
           const updatedRequest = clearanceRequest.toObject();
 

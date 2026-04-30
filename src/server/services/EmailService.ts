@@ -401,6 +401,118 @@ class EmailService {
       html
     });
   }
+
+  async sendClearanceStatusUpdateEmail(email: string, userName: string, status: string, departmentUpdates?: any[]): Promise<boolean> {
+    const isApproved = status === 'completed';
+    const subject = isApproved 
+      ? 'Congratulations! Your Clearance is Approved - IUK Clearance System' 
+      : 'Clearance Status Update - IUK Clearance System';
+    
+    // Dynamic frontend URL
+    const getFrontendUrl = () => {
+      if (process.env.FRONTEND_URL && process.env.FRONTEND_URL !== 'undefined') {
+        return process.env.FRONTEND_URL.replace(/\/$/, '');
+      }
+      return 'http://localhost:8080';
+    };
+
+    const statusBadgeColor = isApproved ? '#10b981' : '#ef4444';
+    const statusText = isApproved ? 'APPROVED' : 'REJECTED';
+    
+    let departmentStatusHtml = '';
+    if (departmentUpdates && departmentUpdates.length > 0) {
+      departmentStatusHtml = `
+        <div style="margin-top: 25px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+          <h3 style="color: #1f2937; font-size: 18px; margin-bottom: 10px;">Department Updates:</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #f9fafb;">
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Department</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Status</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 2 solid #e5e7eb; color: #4b5563;">Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${departmentUpdates.map(update => `
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #1f2937;">${update.name}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: ${update.status === 'approved' ? '#10b981' : '#ef4444'}; font-weight: bold;">
+                      ${update.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                    ${update.comment || '-'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Clearance Update - IUK Clearance System</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
+          .container { background-color: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+          .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid ${statusBadgeColor}; }
+          .logo { font-size: 24px; font-weight: bold; color: ${statusBadgeColor}; margin-bottom: 10px; }
+          .status-banner { background-color: ${isApproved ? '#d1fae5' : '#fee2e2'}; border-left: 4px solid ${statusBadgeColor}; padding: 15px; margin: 20px 0; border-radius: 4px; text-align: center; }
+          .status-label { font-size: 20px; font-weight: bold; color: ${statusBadgeColor}; letter-spacing: 1px; }
+          .action-button { display: inline-block; background-color: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; text-align: center; }
+          .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">IUK Clearance System</div>
+            <h1 style="color: #111827; margin: 0;">Clearance Request Update</h1>
+          </div>
+          
+          <p>Hello <strong>${userName}</strong>,</p>
+          
+          <p>There has been an update to your graduation clearance request. Your overall status is now:</p>
+          
+          <div class="status-banner">
+            <div class="status-label">${statusText}</div>
+          </div>
+          
+          ${isApproved 
+            ? `<p>Congratulations! You have been cleared by all departments. You can now log in to generate and download your official clearance certificate.</p>` 
+            : `<p>Unfortunately, your clearance request has been rejected by one or more departments. Please review the comments below and take the necessary actions to resolve the issues.</p>`
+          }
+          
+          ${departmentStatusHtml}
+          
+          <div style="text-align: center;">
+            <a href="${getFrontendUrl()}/student" class="action-button">View My Dashboard</a>
+          </div>
+          
+          <p>If you have any questions, please contact the respective department or the Registrar's office.</p>
+          
+          <div class="footer">
+            <p>This is an automated message from IUK Clearance System.</p>
+            <p>© 2026 IUK Clearance System. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html
+    });
+  }
 }
 
 // Create singleton instance

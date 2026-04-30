@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 
 import { User } from '@/types';
 
@@ -37,29 +37,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [user, setUser] = useState<User | null>(() => {
-
-    const stored = localStorage.getItem('clearance_user');
-
+    const stored = sessionStorage.getItem('clearance_user');
     if (stored) {
-
       try {
-
         return JSON.parse(stored);
-
       } catch {
-
         return null;
-
       }
-
     }
-
     return null;
-
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('clearance_token');
+    return sessionStorage.getItem('clearance_token');
   });
 
 
@@ -102,9 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(user);
         setToken(token);
-        localStorage.setItem('clearance_user', JSON.stringify(user));
+        sessionStorage.setItem('clearance_user', JSON.stringify(user));
         if (token) {
-          localStorage.setItem('clearance_token', token);
+          sessionStorage.setItem('clearance_token', token);
         }
         return { success: true };
       }
@@ -182,9 +172,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(user);
         const token = (data.token || userData.token) as string;
         setToken(token);
-        localStorage.setItem('clearance_user', JSON.stringify(user));
+        sessionStorage.setItem('clearance_user', JSON.stringify(user));
         if (token) {
-          localStorage.setItem('clearance_token', token);
+          sessionStorage.setItem('clearance_token', token);
         }
         return { success: true };
       }
@@ -201,8 +191,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
+    sessionStorage.removeItem('clearance_user');
+    sessionStorage.removeItem('clearance_token');
+    sessionStorage.clear(); // Ensure everything is wiped
+    // Also clear localStorage just in case legacy data exists
     localStorage.removeItem('clearance_user');
     localStorage.removeItem('clearance_token');
+  }, []);
+
+  // Auto-logout on browser/tab close
+  useEffect(() => {
+    const handleTabClose = () => {
+      // With sessionStorage, this is mostly handled by the browser,
+      // but we can explicitly clear everything on unload for extra security.
+      sessionStorage.clear();
+      localStorage.removeItem('clearance_user');
+      localStorage.removeItem('clearance_token');
+    };
+
+    window.addEventListener('beforeunload', handleTabClose);
+    return () => {
+      window.removeEventListener('beforeunload', handleTabClose);
+    };
   }, []);
 
   return (

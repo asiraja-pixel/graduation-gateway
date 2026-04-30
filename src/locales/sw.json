@@ -281,18 +281,27 @@
     "department": "Mkuu wa Idara"
   },
   "programs": {
-    "sharia_ba": "Shahada ya Sharia",
-    "arabic_ba": "Shahada ya Lugha ya Kiarabu",
-    "bit_dip": "Stashahada ya Teknolojia ya Habari ya Biashara",
+    "sharia_ba": "Shahada ya Sanaa katika Sharia ya Kiislamu",
+    "arabic_ba": "Shahada ya Sanaa katika Lugha ya Kiarabu",
+    "islamic_banking_dip": "Stashahada ya Benki na Fedha za Kiislamu",
+    "islamic_psych_dip": "Stashahada ya Saikolojia ya Kiislamu",
+    "arabic_islamic_dip": "Stashahada ya Lugha ya Kiarabu na Masomo ya Kiislamu",
+    "islamic_banking_cert": "Cheti cha Benki na Fedha za Kiislamu",
+    "arabic_islamic_cert": "Cheti cha Lugha ya Kiarabu na Masomo ya Kiislamu",
+    "business_ba": "Shahada ya Usimamizi wa Biashara",
+    "business_dip": "Stashahada ya Usimamizi wa Biashara",
+    "business_cert": "Cheti cha Usimamizi wa Biashara",
+    "education_ba": "Shahada ya Elimu (B.Ed)",
     "bit_ba": "Shahada ya Teknolojia ya Habari",
+    "bit_dip": "Stashahada ya Teknolojia ya Habari ya Biashara",
     "bba": "Shahada ya Usimamizi wa Biashara",
-    "education_ba": "Shahada ya Elimu",
     "Diploma in Business Information Technology": "Stashahada ya Teknolojia ya Habari ya Biashara",
     "Bachelor of Information Technology": "Shahada ya Teknolojia ya Habari",
     "Bachelor of Business Administration": "Shahada ya Usimamizi wa Biashara",
     "Bachelor of Sharia": "Shahada ya Sharia",
     "Bachelor of Arabic Language": "Shahada ya Lugha ya Kiarabu",
-    "Bachelor of Education": "Shahada ya Elimu"
+    "Bachelor of Education": "Shahada ya Elimu",
+    "Bachelor of Information Technology (BIT)": "Shahada ya Teknolojia ya Habari (BIT)"
   },
   "schools": {
     "sharia": "Shule ya Sharia na Masomo ya Kiislamu",

@@ -2,6 +2,7 @@ import express from 'express';
 import { ClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
 import { User } from '../models/User.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+import { emailService } from '../services/EmailService.js';
 
 type DepartmentClearance = IDepartmentClearance;
 
@@ -176,6 +177,8 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(404).json({ error: 'Clearance request not found' });
     }
 
+    const oldOverallStatus = clearanceRequest.overallStatus;
+
     // Fetch staff signature from DB
     const staffUser = await User.findById(req.user!.id).select('signature');
 
@@ -191,11 +194,41 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
     };
 
     // Update overall status
-    const requestWithMethod = clearanceRequest as unknown as { updateOverallStatus: () => void };
+    const requestWithMethod = clearanceRequest as any;
     if (typeof requestWithMethod.updateOverallStatus === 'function') {
       requestWithMethod.updateOverallStatus();
     }
     await clearanceRequest.save();
+
+    // Trigger email notification if clearance is completed or rejected
+    if (
+      (clearanceRequest.overallStatus === 'completed' || clearanceRequest.overallStatus === 'rejected') && 
+      clearanceRequest.overallStatus !== oldOverallStatus
+    ) {
+      try {
+        // Populate student info to get email
+        const populatedRequest = await ClearanceRequest.findById(clearanceRequest._id).populate('studentId', 'name email');
+        const student = populatedRequest?.studentId as any;
+        
+        if (student && student.email) {
+          const deptUpdates = Object.entries(clearanceRequest.departmentClearances).map(([key, value]: [string, any]) => ({
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            status: value.status,
+            comment: value.comment
+          }));
+
+          await emailService.sendClearanceStatusUpdateEmail(
+            student.email,
+            student.name,
+            clearanceRequest.overallStatus,
+            deptUpdates
+          );
+          console.log(`✅ Clearance completion email sent to student: ${student.email}`);
+        }
+      } catch (emailError) {
+        console.error('⚠️ Failed to send clearance update email:', emailError);
+      }
+    }
 
     res.json(clearanceRequest);
   } catch (error) {

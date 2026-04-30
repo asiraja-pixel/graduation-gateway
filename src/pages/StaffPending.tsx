@@ -17,6 +17,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { getDepartmentLabel, ClearanceRequest, Department, DepartmentClearance } from '@/types';
+import { getProgramKey } from '@/utils/clearanceUtils';
 import { Link } from 'react-router-dom';
 import {
   Dialog,
@@ -115,7 +116,7 @@ export default function StaffPending() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <GraduationCap className="w-4 h-4" />
-                          <span>{t(`programs.${request.program}`)}</span>
+                          <span>{t(`programs.${getProgramKey(request.program)}`)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Mail className="w-4 h-4" />

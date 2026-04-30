@@ -12,6 +12,7 @@ import {
   Users
 } from 'lucide-react';
 import { getDepartmentLabel, Department, DepartmentClearance } from '@/types';
+import { getProgramKey } from '@/utils/clearanceUtils';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -141,7 +142,7 @@ export default function StaffDashboard() {
                     <div>
                       <p className="font-medium">{request.studentName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {request.studentIdNumber} • {t(`programs.${request.program}`)}
+                        {request.studentIdNumber} • {t(`programs.${getProgramKey(request.program)}`)}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">

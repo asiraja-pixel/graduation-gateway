@@ -68,7 +68,7 @@ export default function Signup() {
     {
       key: 'informatics',
       programs: [
-        { key: 'it_ba', english: 'Bachelor of Information Technology' },
+        { key: 'bit_ba', english: 'Bachelor of Information Technology' },
         { key: 'bit_dip', english: 'Diploma in Business Information Technology' }
       ]
     }

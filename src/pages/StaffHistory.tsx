@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { getDepartmentLabel, DepartmentClearance } from '@/types';
+import { getProgramKey } from '@/utils/clearanceUtils';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 
@@ -61,7 +62,7 @@ export default function StaffHistory() {
                           <StatusBadge status={deptClearance?.status || 'pending'} size="sm" />
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {request.studentIdNumber} • {t(`programs.${request.program}`)}
+                          {request.studentIdNumber} • {t(`programs.${getProgramKey(request.program)}`)}
                         </p>
                         {deptClearance?.comment && (
                           <p className="text-sm mt-2 p-2 bg-muted rounded">

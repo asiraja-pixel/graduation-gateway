@@ -10,7 +10,7 @@ export interface IDepartmentClearance {
 }
 
 export interface IClearanceRequest extends Document {
-  studentId: string;
+  studentId: mongoose.Types.ObjectId;
   studentName: string;
   registrationNumber: string;
   program?: string;
