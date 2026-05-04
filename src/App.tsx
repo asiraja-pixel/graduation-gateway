@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { SocketProvider } from "@/contexts/SocketContext";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { SocketProvider } from "@/contexts/SocketProvider";
 import { ClearanceProvider } from "@/contexts/ClearanceProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 

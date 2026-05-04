@@ -1,7 +1,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useClearance } from '@/hooks/useClearance';
-import { useSocket } from '@/contexts/SocketContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -12,7 +11,7 @@ import {
   XCircle,
   Users
 } from 'lucide-react';
-import { getDepartmentLabel, Department, DepartmentClearance } from '@/types';
+import { getDepartmentLabel, Department, DepartmentClearance, ClearanceRequest } from '@/types';
 import { getProgramKey } from '@/utils/clearanceUtils';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -26,7 +25,7 @@ export default function StaffDashboard() {
   const pendingRequests = department ? getDepartmentRequests(department) : [];
   
   // Calculate stats for this department
-  const departmentStats = requests.reduce((acc, req) => {
+  const departmentStats = requests.reduce((acc: { total: number; approved: number; pending: number; rejected: number }, req: ClearanceRequest) => {
     const clearances = req.departmentClearances as Record<string, DepartmentClearance>;
     const deptClearance = department ? clearances[department] : null;
     

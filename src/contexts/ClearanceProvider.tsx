@@ -4,13 +4,13 @@ import {
   Department, 
   ClearanceStatus, 
   DepartmentClearance 
-} from '@/types';
-import { useAuth } from './AuthContext';
-import { useSocket } from './SocketContext';
-import { normalizeClearances } from '@/utils/clearanceUtils';
+} from '../types';
+import { useAuth } from '../hooks/useAuth';
+import { useSocket } from '../hooks/useSocket';
+import { normalizeClearances } from '../utils/clearanceUtils';
 import { ClearanceContext } from './ClearanceContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = ((import.meta as unknown) as { env: Record<string, string> }).env.VITE_API_URL || '';
 
 interface SystemSettings {
   staffDefaultComment?: string;
@@ -178,7 +178,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
   }, [requests]);
 
   const calculateOverallStatus = useCallback((clearances: ClearanceRequest['departmentClearances']): ClearanceStatus => {
-    const clearanceArray = Object.values(clearances);
+    const clearanceArray = Object.values(clearances) as DepartmentClearance[];
 
     if (clearanceArray.some(c => c.status === 'rejected')) return 'rejected';
     if (clearanceArray.every(c => c.status === 'approved')) return 'completed';
@@ -190,7 +190,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         if (token) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/clearance-requests`, {
+          const res = await fetch(`${((import.meta as unknown) as { env: Record<string, string> }).env.VITE_API_URL || 'http://localhost:4000'}/api/clearance-requests`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         if (token) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/clearance-requests/${requestId}/status`, {
+          const res = await fetch(`${((import.meta as unknown) as { env: Record<string, string> }).env.VITE_API_URL || 'http://localhost:4000'}/api/clearance-requests/${requestId}/status`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -280,10 +280,10 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     setRequests(prev => prev.map(request => {
       if (request.id !== requestId) return request;
       
-      const deptKey = (typeof department === 'string' ? department.toLowerCase() : department) as keyof ClearanceRequest['departmentClearances'];
+      const deptKey = (typeof department === 'string' ? department.toLowerCase() : department) as string;
       const clearances = request.departmentClearances as Record<string, DepartmentClearance>;
       
-      const updatedClearances: ClearanceRequest['departmentClearances'] = {
+      const updatedClearances = {
         ...clearances,
         [deptKey]: {
           ...clearances[deptKey],
@@ -294,7 +294,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
           comment: finalComment,
           processedAt: new Date().toISOString(),
         }
-      } as ClearanceRequest['departmentClearances'];
+      } as unknown as ClearanceRequest['departmentClearances'];
 
       const overallStatus = calculateOverallStatus(updatedClearances);
       
@@ -311,10 +311,10 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     setRequests(prev => prev.map(request => {
       if (request.id !== requestId) return request;
       
-      const deptKey = (typeof department === 'string' ? department.toLowerCase() : department) as keyof ClearanceRequest['departmentClearances'];
+      const deptKey = (typeof department === 'string' ? department.toLowerCase() : department) as string;
       const clearances = request.departmentClearances as Record<string, DepartmentClearance>;
       
-      const updatedClearances: ClearanceRequest['departmentClearances'] = {
+      const updatedClearances = {
         ...clearances,
         [deptKey]: {
           ...clearances[deptKey],
@@ -322,7 +322,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
           comment: systemSettings.adminDefaultComment || 'Clearance approved by administrative override.',
           processedAt: new Date().toISOString(),
         }
-      } as ClearanceRequest['departmentClearances'];
+      } as unknown as ClearanceRequest['departmentClearances'];
 
       const overallStatus = calculateOverallStatus(updatedClearances);
       

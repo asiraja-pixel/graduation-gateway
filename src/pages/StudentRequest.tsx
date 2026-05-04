@@ -1,25 +1,23 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useClearance } from '@/hooks/useClearance';
-import { useSocket } from '@/contexts/SocketContext';
+import { useSocket } from '@/hooks/useSocket';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DEPARTMENTS, getDepartmentLabel } from '@/types';
+import { DEPARTMENTS } from '@/types';
 import { AlertCircle, Send, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function StudentRequest() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { getStudentRequest, submitRequest } = useClearance();
+  const { getStudentRequest } = useClearance();
   const { submitClearanceRequest } = useSocket();
-  const navigate = useNavigate();
   
   const existingRequest = user ? getStudentRequest(user.id) : undefined;
   

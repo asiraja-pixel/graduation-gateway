@@ -402,7 +402,12 @@ class EmailService {
     });
   }
 
-  async sendClearanceStatusUpdateEmail(email: string, userName: string, status: string, departmentUpdates?: any[]): Promise<boolean> {
+  async sendClearanceStatusUpdateEmail(
+    email: string, 
+    userName: string, 
+    status: string, 
+    departmentUpdates?: { name: string; status: string; comment?: string }[]
+  ): Promise<boolean> {
     const isApproved = status === 'completed';
     const subject = isApproved 
       ? 'Congratulations! Your Clearance is Approved - IUK Clearance System' 

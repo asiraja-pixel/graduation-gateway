@@ -1,11 +1,10 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useClearance } from '@/hooks/useClearance';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useTranslation } from 'react-i18next';
-import { LanguageSelector } from '@/components/LanguageSelector';
-import { getDepartmentLabel, DepartmentClearance } from '@/types';
+import { DepartmentClearance, ClearanceRequest } from '@/types';
 import { getProgramKey } from '@/utils/clearanceUtils';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
@@ -18,7 +17,7 @@ export default function StaffHistory() {
   const department = user?.department;
   
   // Get requests where this staff member has processed
-  const processedRequests = requests.filter(req => {
+  const processedRequests = requests.filter((req: ClearanceRequest) => {
     let deptClearance: DepartmentClearance | undefined;
     if (Array.isArray(req.departmentClearances)) {
       deptClearance = (req.departmentClearances as DepartmentClearance[]).find(d => d.department === department);
@@ -45,7 +44,7 @@ export default function StaffHistory() {
 
         {processedRequests.length > 0 ? (
           <div className="space-y-4">
-            {processedRequests.map((request) => {
+            {processedRequests.map((request: ClearanceRequest) => {
               let deptClearance: DepartmentClearance | undefined;
               if (Array.isArray(request.departmentClearances)) {
                 deptClearance = (request.departmentClearances as DepartmentClearance[]).find(d => d.department === department);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useClearance } from '@/hooks/useClearance';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,13 @@ import {
   CheckCircle,
   XCircle,
   ArrowRight,
-  Download,
   Send,
   Loader2,
   Image as ImageIcon,
   CheckCircle2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getDepartmentLabel, Department, ClearanceStatus } from '@/types';
+import { getDepartmentLabel, Department, DepartmentClearance } from '@/types';
 import { getProgramKey } from '@/utils/clearanceUtils';
 import { generateClearancePDF } from '@/utils/generateClearancePDF';
 import confetti from 'canvas-confetti';
@@ -50,14 +49,7 @@ export default function StudentDashboard() {
   const departmentClearancesArray = request
     ? Object.entries(request.departmentClearances).map(([dept, data]) => ({
         department: dept as Department,
-        ...(typeof data === 'object' ? data : { 
-          status: 'pending' as ClearanceStatus,
-          processedAt: undefined,
-          staffName: undefined,
-          comment: undefined,
-          staffId: undefined,
-          staffSignature: undefined
-        }),
+        ...(data as DepartmentClearance),
       }))
     : undefined;
 

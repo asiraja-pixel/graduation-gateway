@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ClearanceContext } from '@/contexts/ClearanceContext';
+import { ClearanceContext } from '../contexts/ClearanceContext';
 
 export function useClearance() {
   const context = useContext(ClearanceContext);

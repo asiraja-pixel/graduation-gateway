@@ -23,7 +23,7 @@ const generateToken = (user: IUser) => {
       address: user.address,
       startYear: user.startYear,
       endYear: user.endYear
-      // signature removed — fetched from DB when needed
+      // signature removed fetched from DB when needed
     },
     process.env.JWT_SECRET || 'fallback-secret',
     { expiresIn: '24h' }

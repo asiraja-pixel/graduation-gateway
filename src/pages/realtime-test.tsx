@@ -1,9 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthProvider } from '@/contexts/AuthProvider';
+import { SocketProvider } from '@/contexts/SocketProvider';
 import RealtimeClearanceDashboard from '@/components/RealtimeClearanceDashboard';
-import { SocketProvider } from '@/contexts/SocketContext';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function RealtimeTestPage() {
   const { t } = useTranslation();

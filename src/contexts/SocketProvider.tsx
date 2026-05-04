@@ -1,25 +1,8 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useAuth } from './AuthContext';
-import { ClearanceRequest } from '@/types';
-
-interface SocketContextType {
-  socket: Socket | null;
-  isConnected: boolean;
-  requests: ClearanceRequest[];
-  notifications: unknown[];
-  submitClearanceRequest: (payload?: {
-    studentId?: string;
-    studentName?: string;
-    registrationNumber?: string;
-    program?: string;
-    email?: string;
-  }) => void;
-  updateDepartmentStatus: (requestId: string, department: string, status: string, comment?: string) => void;
-  clearNotifications: () => void;
-}
-
-const SocketContext = createContext<SocketContextType | undefined>(undefined);
+import { useAuth } from '../hooks/useAuth';
+import { ClearanceRequest } from '../types';
+import { SocketContext } from './SocketContext';
 
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -161,12 +144,4 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       {children}
     </SocketContext.Provider>
   );
-}
-
-export function useSocket() {
-  const context = useContext(SocketContext);
-  if (context === undefined) {
-    throw new Error('useSocket must be used within a SocketProvider');
-  }
-  return context;
 }

@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useSocket } from '@/contexts/SocketContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
 import { Department, ClearanceStatus, ClearanceRequest, DepartmentClearance } from '@/types';
 import { getStatusBadge } from '@/utils/statusUtils';
 import { getProgramKey } from '@/utils/clearanceUtils';

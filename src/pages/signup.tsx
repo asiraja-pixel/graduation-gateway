@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GraduationCap, Mail, Lock, AlertCircle, User, UserPlus, Briefcase, Building, Phone } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { CountrySelect } from '@/components/CountrySelect';
 import SignaturePad from '@/components/SignaturePad';
 import { DEPARTMENTS } from '@/types';

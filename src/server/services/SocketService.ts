@@ -2,7 +2,7 @@ import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User.js';
-import { ClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
+import { ClearanceRequest, IClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
 import { emailService } from './EmailService.js';
 
 type DepartmentClearance = IDepartmentClearance;
@@ -104,8 +104,8 @@ export class SocketService {
           const formattedRequest = {
             ...populatedRequest,
             id: populatedRequest!._id.toString(),
-            studentName: (populatedRequest!.studentId as any)?.name || populatedRequest!.studentName,
-            registrationNumber: (populatedRequest!.studentId as any)?.registrationNumber || populatedRequest!.registrationNumber
+            studentName: (populatedRequest!.studentId as unknown as IUser)?.name || populatedRequest!.studentName,
+            registrationNumber: (populatedRequest!.studentId as unknown as IUser)?.registrationNumber || populatedRequest!.registrationNumber
           };
 
           // Emit to all department rooms
@@ -173,7 +173,7 @@ export class SocketService {
           };
 
           // Update overall status
-          const requestWithMethod = clearanceRequest as any;
+          const requestWithMethod = clearanceRequest as IClearanceRequest;
           if (typeof requestWithMethod.updateOverallStatus === 'function') {
             requestWithMethod.updateOverallStatus();
           }
@@ -187,13 +187,13 @@ export class SocketService {
             try {
               // Populate student info to get email
               const populatedRequest = await ClearanceRequest.findById(clearanceRequest._id).populate('studentId', 'name email');
-              const student = populatedRequest?.studentId as any;
+              const student = populatedRequest?.studentId as unknown as IUser;
               
               if (student && student.email) {
-                const deptUpdates = Object.entries(clearanceRequest.departmentClearances).map(([key, value]: [string, any]) => ({
+                const deptUpdates = Object.entries(clearanceRequest.departmentClearances).map(([key, value]) => ({
                   name: key.charAt(0).toUpperCase() + key.slice(1),
-                  status: value.status,
-                  comment: value.comment
+                  status: (value as IDepartmentClearance).status,
+                  comment: (value as IDepartmentClearance).comment
                 }));
 
                 await emailService.sendClearanceStatusUpdateEmail(

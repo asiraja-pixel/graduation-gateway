@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { GraduationCap, Mail, Lock, AlertCircle, User, Briefcase, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';

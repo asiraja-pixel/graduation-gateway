@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useClearance } from '@/hooks/useClearance';
-import { useSocket } from '@/contexts/SocketContext';
+import { useSocket } from '@/hooks/useSocket';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -96,9 +96,9 @@ export default function StaffPending() {
         </div>
 
         {pendingRequests.length > 0 ? (
-          <div className="grid gap-4">
-            {pendingRequests.map((request) => (
-              <Card key={request.id} className="card-elevated">
+          <div className="space-y-4">
+            {pendingRequests.map((request: ClearanceRequest) => (
+              <Card key={request.id} className="card-elevated overflow-hidden">
                 <CardContent className="pt-6">
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Student Info */}

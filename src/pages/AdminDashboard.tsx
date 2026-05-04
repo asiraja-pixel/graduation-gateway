@@ -17,7 +17,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
 import { User, ClearanceRequest } from '@/types';
 import { useTranslation } from 'react-i18next';
 
