@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { LanguageSelector } from './LanguageSelector';
+import { ThemeToggle } from './ThemeToggle';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -70,6 +71,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             </div>
             
             <div className="hidden md:flex items-center gap-4">
+              <ThemeToggle className="text-primary-foreground hover:bg-primary-foreground/10" />
               <LanguageSelector />
               <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-foreground/10 rounded-lg">
                 <User className="w-4 h-4" />

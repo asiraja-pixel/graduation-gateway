@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useClearance } from '@/contexts/ClearanceContext';
+import { useClearance } from '@/hooks/useClearance';
 import { useSocket } from '@/contexts/SocketContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

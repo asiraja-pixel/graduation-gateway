@@ -16,11 +16,14 @@ import {
   Clock,
   Loader2,
   CheckCircle2,
-  AlertCircle,
-  PenLine
+  PenLine,
+  Moon,
+  Sun,
+  Monitor
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { useTheme } from 'next-themes';
 import SignaturePad from '@/components/SignaturePad';
 import {
   Select,
@@ -37,6 +40,7 @@ export default function AdminSettings() {
   const { t } = useTranslation();
   const { token, user } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
@@ -63,6 +67,8 @@ export default function AdminSettings() {
     earlyClearanceDays: '30',
     autoArchiveRequests: false,
     maxFileSize: '5', // MB
+    staffDefaultComment: 'Cleared successfully.',
+    adminDefaultComment: 'Clearance approved by administrative override.',
   });
 
   useEffect(() => {
@@ -392,6 +398,65 @@ export default function AdminSettings() {
                         <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t('admin_settings.theme_mode') || 'Theme Mode'}</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button 
+                        variant={theme === 'light' ? 'default' : 'outline'} 
+                        className="flex items-center gap-2"
+                        onClick={() => setTheme('light')}
+                      >
+                        <Sun className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t('common.theme_light')}</span>
+                      </Button>
+                      <Button 
+                        variant={theme === 'dark' ? 'default' : 'outline'} 
+                        className="flex items-center gap-2"
+                        onClick={() => setTheme('dark')}
+                      >
+                        <Moon className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t('common.theme_dark')}</span>
+                      </Button>
+                      <Button 
+                        variant={theme === 'system' ? 'default' : 'outline'} 
+                        className="flex items-center gap-2"
+                        onClick={() => setTheme('system')}
+                      >
+                        <Monitor className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t('common.theme_system')}</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t space-y-4">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      <PenLine className="w-4 h-4 text-primary" />
+                      {t('admin_settings.default_comments')}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="staffDefaultComment">{t('admin_settings.staff_default_comment')}</Label>
+                        <Input 
+                          id="staffDefaultComment"
+                          value={settings.staffDefaultComment}
+                          onChange={e => setSettings(prev => ({ ...prev, staffDefaultComment: e.target.value }))}
+                          placeholder="e.g. Cleared successfully."
+                        />
+                        <p className="text-xs text-muted-foreground">{t('admin_settings.staff_default_comment_desc')}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="adminDefaultComment">{t('admin_settings.admin_default_comment')}</Label>
+                        <Input 
+                          id="adminDefaultComment"
+                          value={settings.adminDefaultComment}
+                          onChange={e => setSettings(prev => ({ ...prev, adminDefaultComment: e.target.value }))}
+                          placeholder="e.g. Clearance approved by administrative override."
+                        />
+                        <p className="text-xs text-muted-foreground">{t('admin_settings.admin_default_comment_desc')}</p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

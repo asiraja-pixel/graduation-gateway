@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { GraduationCap, Mail, Lock, AlertCircle, User, Briefcase, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -48,7 +49,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex relative">
       {/* Language Selector */}
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+        <ThemeToggle className="bg-background/20 text-primary-foreground hover:bg-background/30 dark:bg-background/10 dark:text-foreground" />
         <LanguageSelector />
       </div>
 
@@ -76,20 +78,20 @@ export default function Login() {
 
         <div className="flex gap-8 text-primary-foreground">
           <div>
-            <div className="text-3xl font-bold">4+</div>
-            <div className="text-sm opacity-70">Schools</div>
+            <div className="text-3xl font-bold">{t('landing.stats.schools_count')}</div>
+            <div className="text-sm opacity-70">{t('landing.schools')}</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">13+</div>
-            <div className="text-sm opacity-70">Programs</div>
+            <div className="text-3xl font-bold">{t('landing.stats.programs_count')}</div>
+            <div className="text-sm opacity-70">{t('landing.programs')}</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">100%</div>
-            <div className="text-sm opacity-70">Digital Process</div>
+            <div className="text-3xl font-bold">{t('landing.stats.digital_count')}</div>
+            <div className="text-sm opacity-70">{t('landing.digital_process')}</div>
           </div>
           <div>
-            <div className="text-3xl font-bold">24/7</div>
-            <div className="text-sm opacity-70">Access</div>
+            <div className="text-3xl font-bold">{t('landing.stats.access_count')}</div>
+            <div className="text-sm opacity-70">{t('landing.access')}</div>
           </div>
         </div>
       </div>

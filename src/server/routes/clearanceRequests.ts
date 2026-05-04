@@ -1,6 +1,7 @@
 import express from 'express';
-import { ClearanceRequest, IDepartmentClearance } from '../models/ClearanceRequest.js';
-import { User } from '../models/User.js';
+import { ClearanceRequest, IDepartmentClearance, IClearanceRequest } from '../models/ClearanceRequest.js';
+import { User, IUser } from '../models/User.js';
+import { SystemSettings } from '../models/SystemSettings.js';
 import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 import { emailService } from '../services/EmailService.js';
 
@@ -19,7 +20,7 @@ router.get('/', authenticateToken, async (_req: AuthRequest, res) => {
     // Ensure we use the latest name from the User model if available
     const formattedRequests = requests.map(req => {
       const doc = req.toObject();
-      const student = req.studentId as any;
+      const student = req.studentId as unknown as IUser;
       return {
         ...doc,
         id: doc._id?.toString() || doc.id,
@@ -45,7 +46,7 @@ router.get('/my', authenticateToken, async (req: AuthRequest, res) => {
     
     const formattedRequests = requests.map(req => {
       const doc = req.toObject();
-      const student = req.studentId as any;
+      const student = req.studentId as unknown as IUser;
       return {
         ...doc,
         id: doc._id?.toString() || doc.id,
@@ -73,7 +74,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
     }
 
     const doc = request.toObject();
-    const student = request.studentId as any;
+    const student = request.studentId as unknown as IUser;
     const formattedRequest = {
       ...doc,
       id: doc._id?.toString() || doc.id,
@@ -182,6 +183,20 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
     // Fetch staff signature from DB
     const staffUser = await User.findById(req.user!.id).select('signature');
 
+    // Get default comments from settings if none provided
+    let finalComment = comment;
+    if (!comment || comment.trim() === '') {
+      const settingKey = isAdmin ? 'adminDefaultComment' : 'staffDefaultComment';
+      const setting = await SystemSettings.findOne({ key: settingKey });
+      if (setting) {
+        finalComment = setting.value;
+      } else {
+        finalComment = isAdmin 
+          ? 'Clearance approved by administrative override.' 
+          : 'Cleared successfully.';
+      }
+    }
+
     // Update department status
     const deptClearances = (clearanceRequest.departmentClearances as Record<string, DepartmentClearance>);
     deptClearances[department] = {
@@ -190,13 +205,12 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       staffId: req.user!.id,
       staffName: req.user!.name,
       staffSignature: staffUser?.signature,
-      comment: isAdmin ? (comment || 'Overridden by admin') : comment
+      comment: finalComment
     };
 
     // Update overall status
-    const requestWithMethod = clearanceRequest as any;
-    if (typeof requestWithMethod.updateOverallStatus === 'function') {
-      requestWithMethod.updateOverallStatus();
+    if (typeof clearanceRequest.updateOverallStatus === 'function') {
+      clearanceRequest.updateOverallStatus();
     }
     await clearanceRequest.save();
 
@@ -208,13 +222,13 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       try {
         // Populate student info to get email
         const populatedRequest = await ClearanceRequest.findById(clearanceRequest._id).populate('studentId', 'name email');
-        const student = populatedRequest?.studentId as any;
+        const student = populatedRequest?.studentId as unknown as IUser;
         
         if (student && student.email) {
-          const deptUpdates = Object.entries(clearanceRequest.departmentClearances).map(([key, value]: [string, any]) => ({
+          const deptUpdates = Object.entries(clearanceRequest.departmentClearances).map(([key, value]) => ({
             name: key.charAt(0).toUpperCase() + key.slice(1),
-            status: value.status,
-            comment: value.comment
+            status: (value as IDepartmentClearance).status,
+            comment: (value as IDepartmentClearance).comment
           }));
 
           await emailService.sendClearanceStatusUpdateEmail(

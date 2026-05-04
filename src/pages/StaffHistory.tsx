@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useClearance } from '@/contexts/ClearanceContext';
+import { useClearance } from '@/hooks/useClearance';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useTranslation } from 'react-i18next';

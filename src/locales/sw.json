@@ -39,7 +39,10 @@
     "submitting": "Inawasilisha...",
     "graduation_cap": "IUK",
     "edit": "Hariri",
-    "delete": "Futa"
+    "delete": "Futa",
+    "theme_light": "Hali ya Mwanga",
+    "theme_dark": "Hali ya Giza",
+    "theme_system": "Chaguo-msingi la Mfumo"
   },
   "landing": {
     "title": "Mfumo wa Ukaguzi wa IUK",
@@ -57,7 +60,13 @@
     "schools": "Shule",
     "programs": "Programu",
     "digital_process": "Mchakato wa Kidijitali",
-    "access": "Ufikiaji"
+    "access": "Ufikiaji",
+    "stats": {
+      "schools_count": "4+",
+      "programs_count": "13+",
+      "digital_count": "100%",
+      "access_count": "24/7"
+    }
   },
   "auth": {
     "login": "Ingia",
@@ -344,8 +353,15 @@
     "status_changes_desc": "Wakati idara inaidhinisha au kukataa ombi.",
     "regional_settings": "Mipangilio ya Kikanda na Lugha",
     "regional_settings_desc": "Sanidi maeneo ya saa na miundo ya tarehe.",
+    "language": "Lugha",
     "timezone": "Eneo la Saa",
     "date_format": "Muundo wa Tarehe",
+    "theme_mode": "Muonekano",
+    "default_comments": "Maoni ya Chaguo-msingi",
+    "staff_default_comment": "Maoni ya Chaguo-msingi ya Mfanyakazi",
+    "staff_default_comment_desc": "Maoni yanayotumiwa wakati mfanyakazi anamvusha mwanafunzi bila kuandika maoni maalum.",
+    "admin_default_comment": "Maoni ya Chaguo-msingi ya Msimamizi",
+    "admin_default_comment_desc": "Maoni yanayotumiwa wakati msimamizi anapofuta hali ya ukaguzi.",
     "deadlines_constraints": "Muda wa Mwisho na Vizuizi",
     "deadlines_constraints_desc": "Weka mipaka ya muda kwa mchakato wa ukaguzi.",
     "clearance_deadline": "Muda wa Mwisho wa Ukaguzi",

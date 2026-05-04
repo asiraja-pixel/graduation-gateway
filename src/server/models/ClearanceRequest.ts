@@ -31,6 +31,7 @@ export interface IClearanceRequest extends Document {
   };
   submittedAt: Date;
   lastUpdated: Date;
+  updateOverallStatus(): void;
 }
 
 const DepartmentClearanceSchema = new Schema<IDepartmentClearance>({

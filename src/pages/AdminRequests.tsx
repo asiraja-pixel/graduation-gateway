@@ -62,7 +62,7 @@ const overrideRequestStatus = async (token: string, requestId: string, departmen
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ department, status, comment: 'Overridden by admin' }),
+    body: JSON.stringify({ department, status }),
   });
   if (!res.ok) throw new Error('Failed to override status');
   return res.json();

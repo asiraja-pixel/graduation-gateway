@@ -13,6 +13,7 @@ import { DEPARTMENTS } from '@/types';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -165,7 +166,8 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex relative">
       {/* Language Selector */}
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+        <ThemeToggle className="bg-background/20 text-primary-foreground hover:bg-background/30 dark:bg-background/10 dark:text-foreground" />
         <LanguageSelector />
       </div>
 

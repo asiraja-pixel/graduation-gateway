@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { 
   ClearanceRequest, 
   Department, 
@@ -8,23 +8,42 @@ import {
 import { useAuth } from './AuthContext';
 import { useSocket } from './SocketContext';
 import { normalizeClearances } from '@/utils/clearanceUtils';
+import { ClearanceContext } from './ClearanceContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-interface ClearanceContextType {
-  requests: ClearanceRequest[];
-  getStudentRequest: (studentId: string) => ClearanceRequest | undefined;
-  getDepartmentRequests: (department: Department) => ClearanceRequest[];
-  submitRequest: (request: Omit<ClearanceRequest, 'id' | 'submittedAt' | 'overallStatus' | 'departmentClearances'>) => void;
-  processRequest: (requestId: string, department: Department, status: ClearanceStatus, staffId: string, staffName: string, staffSignature?: string, comment?: string) => void;
-  overrideStatus: (requestId: string, department: Department, status: ClearanceStatus) => void;
+interface SystemSettings {
+  staffDefaultComment?: string;
+  adminDefaultComment?: string;
+  [key: string]: unknown;
 }
-
-const ClearanceContext = createContext<ClearanceContextType | undefined>(undefined);
 
 export function ClearanceProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<ClearanceRequest[]>([]);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>({
+    staffDefaultComment: 'Cleared successfully.',
+    adminDefaultComment: 'Clearance approved by administrative override.'
+  });
   const { token, user } = useAuth();
+
+  // Fetch system settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (!token) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/settings`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSystemSettings(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings in ClearanceContext:', error);
+      }
+    };
+    fetchSettings();
+  }, [token]);
 
   // Fetch requests from backend when authenticated
   useEffect(() => {
@@ -221,6 +240,10 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
     staffSignature?: string,
     comment?: string
   ) => {
+    const finalComment = (comment && comment.trim() !== '') 
+      ? comment 
+      : (status === 'approved' ? (systemSettings.staffDefaultComment || 'Cleared successfully.') : comment);
+
     // Send update to backend first
     (async () => {
       try {
@@ -234,7 +257,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({
               department: typeof department === 'string' ? department.toLowerCase() : department,
               status,
-              comment
+              comment: finalComment
             })
           });
           if (res.ok) {
@@ -268,7 +291,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
           staffId,
           staffName,
           staffSignature,
-          comment,
+          comment: finalComment,
           processedAt: new Date().toISOString(),
         }
       } as ClearanceRequest['departmentClearances'];
@@ -282,7 +305,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         completedAt: overallStatus !== 'pending' ? new Date().toISOString() : undefined,
       };
     }));
-  }, [token, calculateOverallStatus]);
+  }, [token, calculateOverallStatus, systemSettings.staffDefaultComment]);
 
   const overrideStatus = useCallback((requestId: string, department: Department, status: ClearanceStatus) => {
     setRequests(prev => prev.map(request => {
@@ -296,7 +319,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         [deptKey]: {
           ...clearances[deptKey],
           status,
-          comment: clearances[deptKey]?.comment ? `${clearances[deptKey].comment} [Admin Override]` : '[Admin Override]',
+          comment: systemSettings.adminDefaultComment || 'Clearance approved by administrative override.',
           processedAt: new Date().toISOString(),
         }
       } as ClearanceRequest['departmentClearances'];
@@ -310,7 +333,7 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
         completedAt: overallStatus !== 'pending' ? new Date().toISOString() : undefined,
       };
     }));
-  }, [calculateOverallStatus]);
+  }, [calculateOverallStatus, systemSettings.adminDefaultComment]);
 
   return (
     <ClearanceContext.Provider value={{
@@ -324,12 +347,4 @@ export function ClearanceProvider({ children }: { children: ReactNode }) {
       {children}
     </ClearanceContext.Provider>
   );
-}
-
-export function useClearance() {
-  const context = useContext(ClearanceContext);
-  if (context === undefined) {
-    throw new Error('useClearance must be used within a ClearanceProvider');
-  }
-  return context;
 }

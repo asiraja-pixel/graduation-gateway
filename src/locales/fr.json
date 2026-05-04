@@ -39,7 +39,10 @@
     "submitting": "Soumission...",
     "graduation_cap": "IUK",
     "edit": "Modifier",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "theme_light": "Mode Clair",
+    "theme_dark": "Mode Sombre",
+    "theme_system": "Défaut du Système"
   },
   "landing": {
     "title": "Système de Certification Universitaire",
@@ -57,7 +60,13 @@
     "schools": "Écoles",
     "programs": "Programmes",
     "digital_process": "Processus Numérique",
-    "access": "Accès"
+    "access": "Accès",
+    "stats": {
+      "schools_count": "4+",
+      "programs_count": "13+",
+      "digital_count": "100%",
+      "access_count": "24/7"
+    }
   },
   "auth": {
     "login": "Connexion",
@@ -343,9 +352,16 @@
     "status_changes_desc": "Lorsqu'un département approuve ou rejette une demande.",
     "regional_settings": "Paramètres Régionaux & Langue",
     "regional_settings_desc": "Configurer les fuseaux horaires et les formats de date.",
-    "timezone": "Fuseau Horaire",
-    "date_format": "Format de Date",
-    "deadlines_constraints": "Délais & Contraintes",
+    "language": "Langue",
+    "timezone": "Fuseau horaire",
+    "date_format": "Format de date",
+    "theme_mode": "Apparence",
+    "default_comments": "Commentaires par Défaut",
+    "staff_default_comment": "Commentaire par Défaut du Personnel",
+    "staff_default_comment_desc": "Commentaire utilisé lorsque le personnel valide un étudiant sans écrire de commentaire personnalisé.",
+    "admin_default_comment": "Commentaire par Défaut de l'Administrateur",
+    "admin_default_comment_desc": "Commentaire utilisé lorsqu'un administrateur outrepasse un statut de quitus.",
+    "deadlines_constraints": "Délais et Contraintes",
     "deadlines_constraints_desc": "Définir des limites de temps pour le processus de quitus.",
     "clearance_deadline": "Date Limite de Quitus",
     "early_clearance_days": "Jours de Quitus Anticipé",

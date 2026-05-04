@@ -39,7 +39,10 @@
     "submitting": "Submitting...",
     "graduation_cap": "IUK",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "theme_light": "Light Mode",
+    "theme_dark": "Dark Mode",
+    "theme_system": "System Default"
   },
   "landing": {
     "title": "IUK Clearance System",
@@ -57,7 +60,13 @@
     "schools": "Schools",
     "programs": "Programs",
     "digital_process": "Digital Process",
-    "access": "Access"
+    "access": "Access",
+    "stats": {
+      "schools_count": "4+",
+      "programs_count": "13+",
+      "digital_count": "100%",
+      "access_count": "24/7"
+    }
   },
   "auth": {
     "login": "Login",
@@ -347,8 +356,15 @@
     "status_changes_desc": "When a department approves or rejects a request.",
     "regional_settings": "Regional & Language Settings",
     "regional_settings_desc": "Configure timezones and date formats.",
+"language": "Language",
     "timezone": "Timezone",
     "date_format": "Date Format",
+    "theme_mode": "Appearance",
+    "default_comments": "Default Comments",
+    "staff_default_comment": "Staff Default Comment",
+    "staff_default_comment_desc": "Comment used when staff clears a student without writing a custom comment.",
+    "admin_default_comment": "Admin Default Comment",
+    "admin_default_comment_desc": "Comment used when an administrator overrides a clearance status.",
     "deadlines_constraints": "Deadlines & Constraints",
     "deadlines_constraints_desc": "Set time limits for the clearance process.",
     "clearance_deadline": "Clearance Deadline",

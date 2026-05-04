@@ -39,7 +39,10 @@
     "submitting": "جاري الإرسال...",
     "graduation_cap": "IUK",
     "edit": "تعديل",
-    "delete": "حذف"
+    "delete": "حذف",
+    "theme_light": "الوضع الفاتح",
+    "theme_dark": "الوضع الداكن",
+    "theme_system": "تلقائي حسب النظام"
   },
   "landing": {
     "title": "نظام تصديق التخرج",
@@ -57,7 +60,13 @@
     "schools": "الكليات",
     "programs": "البرامج",
     "digital_process": "العملية الرقمية",
-    "access": "الوصول"
+    "access": "الوصول",
+    "stats": {
+      "schools_count": "+4",
+      "programs_count": "+13",
+      "digital_count": "%100",
+      "access_count": "7/24"
+    }
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -343,8 +352,15 @@
     "status_changes_desc": "عندما يوافق قسم أو يرفض طلباً.",
     "regional_settings": "الإعدادات الإقليمية واللغة",
     "regional_settings_desc": "تكوين المناطق الزمنية وتنسيقات التاريخ.",
+"language": "اللغة",
     "timezone": "المنطقة الزمنية",
     "date_format": "تنسيق التاريخ",
+    "theme_mode": "المظهر",
+    "default_comments": "التعليقات الافتراضية",
+    "staff_default_comment": "تعليق الموظف الافتراضي",
+    "staff_default_comment_desc": "التعليق المستخدم عندما يقوم الموظف بالموافقة دون كتابة تعليق مخصص.",
+    "admin_default_comment": "تعليق المدير الافتراضي",
+    "admin_default_comment_desc": "التعليق المستخدم عندما يقوم المدير بتجاوز حالة براءة الذمة.",
     "deadlines_constraints": "المواعيد النهائية والقيود",
     "deadlines_constraints_desc": "تعيين حدود زمنية لعملية براءة الذمة.",
     "clearance_deadline": "الموعد النهائي لبراءة الذمة",
